@@ -1,0 +1,68 @@
+# -*- mode: fvwm -*-
+# ====================[ screen                             ]====================
+#
+# --------------------( LICENSE                            )--------------------
+# Copyright 2007-2012 by Cecil Curry.
+# See "COPYING" for additional details.
+#
+# --------------------( SYNOPSIS                           )--------------------
+# Handle screen attributes (e.g., resolution, DPI, bit depth).
+#
+# --------------------( TODO                               )--------------------
+# * Ideally, the MenuSetScreenResolution should be dynamically filled on the
+#   basis of what "xrandr" reports the current screen to support. A Zeshy
+#   function get_screen_resolutions() spitting out newline-delimited supported
+#   screen resolutions would go a long way to simplifying such logic.
+# * We should probably be using Zeshy as our default shell. However, as comments
+#   under MakeDirIfNeeded() suggest, this won't necessarily be straightforward.
+#   We'll need to run a slightly augmented Zeshy: namely, a Zeshy that on
+#   exceptions prefixes output with "LogErrorAndDie" (or some such). Hmmm;
+#   interesting. We could certainly add a startup_zeshy_fvwm() Zeshy function
+#   detecting whether it's running *DIRECTLY* under Fluviol as the Fluviol shell
+#   and, if so, adjust its behavior accordingly. But how, pray tell, do we
+#   differentiate Zeshy as run under Fluakes from Zeshy as run from PipeRead()
+#   FVWM functions? No idea. May not be possible. Ah! But we *DO*... hmmmm. O.K.;
+#   right. It's pretty simple. We'd need a new external command. Call it, say,
+#   "zeshy-fluviol". Simple! Obviously, it just shebangs itself into Zeshy and
+#   then augments TRAPZERR behavior as described above. It's not exactly
+#   straightforward to set this in FVWM, however.
+#   FVWM does provide an ExecUseShell() command, forcing all subsequent Exec()
+#   calls to run under such shell. Great! Just pass the path to "zeshy-fluviol".
+#   Unfortunately, PipeRead() doesn't appear to respect such setting. Contrary
+#   to "man fvwm", PipeRead() in fact appears to respect the ${SHELL} global --
+#   in my case, "zsh" or "zeshy". So, couldn't we just prefix the execution of
+#   Fluviol in "/etc/x11/Sessions/fluviol" with "SHELL=/path/to/zeshy-fluviol"?
+#   Seems a bit hacky, but I don't exactly see why that wouldn't work. Ponder.
+#   For a great FVWM thread on this very subject, see:
+#   http://www.fvwmforums.org/phpBB3/viewtopic.php?f=6&t=2899
+# * Why does FVWM fail to restore the prior resolution on defocusing "wine"?
+#   It's quite annoying. In fact, it appears to happen with *EVERY* game, run by
+#   wine or not. I think, anyway. Or perhaps not. In any case, we should probably
+#   examine just how we're currently minimizing applications. It's probably
+#   "against the book." Googling about strongly suggests that "wine" should be
+#   restoring resolution on losing focus. O.K.; *NOW WE ARE GETTING SOMEWHERE*.
+#   Check out the nearly final comment beginning "I finished checking the..." at:
+#   https://bugs.launchpad.net/ubuntu/+source/xorg-server/+bug/626321
+#   Great research, Luis Alvarado! Turns out every windowing manager suffers
+#   from this. It's not FVWM's fault; it's not Wine's fault. It's X.org's fault.
+#   But we can still hack a solution into place. It's pretty simple: after
+#   defocusing (i.e., minimizing, closing) *ANY* window, dynamically check
+#   "xrandr" output to determine whether or not we're in the same screen
+#   resolution as cached in a new variable ${SCREEN_RESOLUTION} (or something).
+#   Set this variable on FVWM startup and every successful call to
+#   SetScreenResolution(). If the current screen resolution differs, forcefully
+#   restore it to what's in ${SCREEN_RESOLUTION}. It sounds simple -- and I'm
+#   sure it probably is. But I'm unsure when I'll have the time to crack at
+#   this, realistically. *sigh*
+
+# ....................{ SETTERS                            }....................
+#FIXME: I appear to currently use "xrandr -mode $0". Any meaningful difference?
+# void SetScreenResolution(string screenResolution)
+#
+# Set the current screen resolution.
+DefineFunc SetScreenResolution
++ I PipeRead 'xrandr -s $0 && echo Restart'
+
+# --------------------( WASTELANDS                         )--------------------
+#DestroyMenu MenuSetScreenResolution
+#AddToMenu   MenuSetScreenResolution 'Screen Resolution'

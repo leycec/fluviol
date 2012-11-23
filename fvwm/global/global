@@ -1,0 +1,260 @@
+# -*- mode: fvwm -*-
+# ====================[ global                             ]====================
+#
+# --------------------( LICENSE                            )--------------------
+# Copyright 2007-2012 by Cecil Curry.
+# See "COPYING" for additional details.
+#
+# --------------------( SYNOPSIS                           )--------------------
+# Define core Fluviol globals.
+
+# ....................{ PATHS                              }....................
+# Fluviol cache directory. Fluviol caches rotation symlinks, image thumbnails,
+# et al. to the directory, here.
+SetDirAndMakeIfNeeded FLUVIOL_CACHE_HOME "$[FLUVIOL_HOME]/cache"
+
+# Fluviol binary directory. Fluviol calls external binaries, scripts, and other
+# executables in this directory.
+#SetDir FLUVIOL_BIN_PATH "$[FLUVIOL_HOME]/bin"
+
+# Fluviol's Zsh home directory. Zeshy is a high-level Zsh framework implementing
+# common Zsh script functions, aliases, and components.
+SetDir FLUVIOL_ZSH_HOME "$[FLUVIOL_HOME]/zsh"
+
+# Fluviol's Zeshy home directory. Zeshy is a high-level Zsh framework consisting
+# of common functions, aliases, and components.
+#
+# Folque and Fluake scripts are fed this path as an environment variable on
+# startup, to allow their shells to call common scripts residing in this path.
+# Note that if this path does not exist, it defaults to the empty string.
+SetDir FLUVIOL_ZESHY_HOME "$[FLUVIOL_ZSH_HOME]/zeshy"
+
+# The path having shell scripts specific to the folque. This is a so-called
+# "dot directory" as most of the scripts in this path have names necessarily
+# starting with a dot: e.g., ".zshrc".
+#
+# The folque is fed this path as an environment variable on startup, so as to
+# force its shell to locate and source shell startup files (e.g., ".zshrc")
+# from this directory, rather than the default. Note that if this path does not
+# exist, it defaults to the user's home directory in the reliable hope that that
+# path has the requisite shell startup files.
+#
+# See the "FLUVIOL_FOLQUE_SHELL_ENVIRONMENT" variable below for details.
+SetDir FLUVIOL_FOLQUE_HOME "$[FLUVIOL_ZSH_HOME]/folque"
+
+# The path having shell scripts specific to the fluake, but otherwise
+# similar to the "FLUVIOL_FOLQUE_HOME" variable above.
+SetDir FLUVIOL_FLUAKE_HOME "$[FLUVIOL_ZSH_HOME]/fluake"
+
+# Rotate wallpaper into this target directory. This directory will be created
+# for you if does not already exist, and is used to cache the selection of
+# which random image from the source directory will be used as wallpaper for
+# which desktop page.
+#
+# See "RotateWallpaper" for more details.
+SetDirAndMakeIfNeeded FLUVIOL_WALLPAPER_CACHE_HOME\
+    "$[FLUVIOL_CACHE_HOME]/wallpaper"
+
+# ....................{ PATHS ~ user                       }....................
+#FIXME: Clearly insufficient. Adopt Zeshy-ish solutions. For example, if
+#$[FLUVIOL_CONFIG_FILE] does not exist, create it from a system-wide default.
+
+# Absolute path of the current user's Fluviol dot directory.
+SetDirAndMakeIfNeeded FLUVIOL_DOT_DIR "$[HOME]/.fluviol"
+
+# Absolute path of the current user's Fluviol configuration and key bindings.
+#SetFile FLUVIOL_CONFIG_FILE "$[FLUVIOL_DOT_DIR]/config"
+#SetFile FLUVIOL_KEYS_FILE   "$[FLUVIOL_DOT_DIR]/keys"
+
+# ....................{ DEPENDENCIES ~ config              }....................
+# Import the current user's configuration.
+Import $./input
+Import $./config
+
+# ....................{ BINDINGS                           }....................
+# Key bindings depend on and hence must be declared after importing the current
+# user's configuration.
+
+# Make one alias for each key according to the current keymap: e.g., if a Dvorak
+# keymap, then alias the $[D] environment variable to "e", since "d" on a Dvorak
+# keymap actually inputs the "e" character instead.
+Test (EnvIsSet FLUVIOL_KEYMAP) SetKeyNames$[FLUVIOL_KEYMAP]
+
+# ....................{ FVWM-CRYSTAL                       }....................
+# FVWM-Crystal sets the "SelectOnReleaseKey" environment variable; FVWM does
+# not. As such, testing for presence of this environment variable constitutes a
+# sufficient test for whether we are running under FVWM-Crystal. (Joy-joy!)
+Test (EnvIsSet SelectOnReleaseKey) SetEnv FLUVIOL_IS_FVWM_CRYSTAL "yes"
+
+# If running under FVWM-Crystal, import FVWM-Crystal-specific functionality. Do
+# so prior to any other startup initialization, since such initialization
+# overwrites stock FVWM-Crystal settings with Fluviol settings.
+AddToFunc StartFunction
++ I Test (EnvIsSet FLUVIOL_IS_FVWM_CRYSTAL) ImportFluviol crystal
+
+# ....................{ DEPENDENCIES ~ keys                }....................
+# void Bind(char *KeyName, char *KeyModifiers, char *FunctionName)
+#
+# Bind the passed key under the passed modifiers to the passed function.
+DefineFunc Bind
++ I Key $0 $[FLUVIOL_CONTEXT_ANY] $[1-]
+
+# ....................{ FLUAKE                             }....................
+# The resource name assigned to each Fluake on console creation.
+SetEnv FLUVIOL_FLUAKE_NAME "Fluake"
+
+#FIXME: Define me. What the...? Actually, just delete me. I'm clueless, here.
+SetEnv FLUVIOL_FLUAKE_ENVIRONMENT ""
+
+#FIXME: Can we dynamically inspect proper values for this from the local
+#X11 settings?
+# The unmaximized window position and size assigned to Fluakes on
+# creation. This is a set of four arguments to be passed to FVWM's "ResizeMove"
+# function in which the first and second arguments are the window's initial
+# width and height, and second and third arguments are the window's initial
+# upper left X and Y coordinate. See "man fvwm" for details.
+#
+# By default, this assigns each such console a traditional size of 80cx24c
+# (i.e., 80 characters high by 24 characters wide) and position of the lower-
+# right hand corner of the current desktop.
+#
+# Fluakes are maximized on creation, however! Thus, this is only the
+# window position and size for Fluakes you manually unmaximize.
+SetEnv FLUVIOL_FLUAKE_SIZE_POSITION "80c 24c -0 -0"
+
+#FIXME: This is a fragile command. I've hard-coded "-n", here, which is bad.
+#This needs be generalized to other xterms.
+# The external command used to create new Fluakes.
+#
+# By default, this command creates a new URxvt client of a running URxvt daemon,
+# positions that client at the upper-left of the page, and provides that client
+# a non-unique window name identifying it as a Fluake and a unique icon
+# name specifically identifying this particular Fluake.
+SetEnv FLUVIOL_FLUAKE_COMMAND_PRE "$[FLUVIOL_FLUAKE_ENVIRONMENT] exec \
+    $[FLUVIOL_XTERM_COMMAND] \
+    $[FLUVIOL_XTERM_COMMAND_ARGUMENTS] \
+    -name $[FLUVIOL_FLUAKE_NAME]"
+SetEnv FLUVIOL_FLUAKE_COMMAND_ICON_NAME "-n"
+SetEnv FLUVIOL_FLUAKE_COMMAND_POST "-e '$[FLUVIOL_SHELL_COMMAND]'"
+
+# ....................{ FOLQUE                             }....................
+#FIXME: Uhm; it's not, currently. Should it be?
+# Note that the directory name ".Fluvio.zsh/" is prefixed with a ".". This
+# prevents that directory name from appearing in the FVWM-Crystal submenu of all
+# installed user recipes. See the function "Recipes-generator" in the
+# "/usr/share/fvwm-crystal/fvwm/components/functions/Preferences-Menu" file.
+SetEnv FLUVIOL_FOLQUE_SHELL_ENVIRONMENT \
+  "ZESHY_HOME='$[FLUVIOL_ZESHY_HOME]' ZDOTDIR='$[FLUVIOL_FOLQUE_HOME]'"
+
+# The window resource name assigned to the Folque on creation.
+SetEnv FLUVIOL_FOLQUE_NAME "Folque"
+
+#FIXME: "-name" and "-e" may be "urxvt"-specific. Install other xterms and test.
+# External command used to create Folque.
+#
+# By default, this command creates a new URxvt client of a running URxvt daemon,
+# positions that client at the lower-left of the page, and provides that client
+# some permanent unique name for later identification.
+SetEnv FLUVIOL_FOLQUE_COMMAND "$[FLUVIOL_FOLQUE_SHELL_ENVIRONMENT] exec \
+    $[FLUVIOL_XTERM_COMMAND] \
+    $[FLUVIOL_XTERM_COMMAND_ARGUMENTS] \
+    -name $[FLUVIOL_FOLQUE_NAME] -e '$[FLUVIOL_SHELL_COMMAND]'"
+
+# ....................{ SCREENSHOTS                        }....................
+#FIXME: Should just be a Zeshy function rather than external command.
+# External program used to capture screenshots.
+#SetFile FLUVIOL_SCREENSHOT_COMMAND "$[FLUVIOL_BIN_PATH]/screenshot"
+SetCommand FLUVIOL_SCREENSHOT_COMMAND "zscreenshot"
+
+# External commands used to capture screenshots of the entire screen, selected
+# window, and selected region.
+SetEnv FLUVIOL_SCREENSHOT_SCREEN_COMMAND "$[FLUVIOL_SCREENSHOT_COMMAND] --screen"
+SetEnv FLUVIOL_SCREENSHOT_WINDOW_COMMAND "$[FLUVIOL_SCREENSHOT_COMMAND] --window"
+SetEnv FLUVIOL_SCREENSHOT_REGION_COMMAND "$[FLUVIOL_SCREENSHOT_COMMAND] --region"
+
+# Directory to which the above commands save screenshots.
+SetDirAndMakeIfNeeded FLUVIOL_SCREENSHOT_HOME "$[FLUVIOL_CACHE_HOME]/screenshots"
+
+# ....................{ WALLPAPER ROTATION                 }....................
+# Map the wallpaper command to appropriate options to be passed to such command.
+PipeRead '\
+case "$[FLUVIOL_WALLPAPER_COMMAND]" in \
+  *Esetroot) A="-fit";; \
+  *feh) A="--bg-center";; \
+  *habak) A="-mC -hi";; \
+esac; \
+echo SetEnv FLUVIOL_WALLPAPER_ARGUMENTS "$A"'
+
+# ....................{ WINDOW OPTIONS                     }....................
+# Move windows this far, when moving. (This is, by default, in percentage of
+# the screen size. Thus, for example, a value of 1 moves windows by 1% of
+# the screen size.)
+SetEnv WINDOW_MOVE_DISTANCE 1c
+
+# Resize windows this far, when resizing. (This is, by default, in percentage of
+# the screen size. Thus, for example, a value of 1 resizes windows by 1% of
+# the screen size.)
+SetEnv WINDOW_RESIZE_DISTANCE 1c
+
+# ....................{ WINDOW TYPES                       }....................
+# Circulatable windows are cycled while hitting <Super-TAB> and
+# <Super-Shift-TAB> on the current desktop and page.
+SetEnv FLUVIOL_CIRCULATABLE_WINDOW "CurrentDesk, CurrentPage, AcceptsFocus"
+# "CurrentDesk, CurrentPage, AcceptsFocus, !Iconic"
+
+# Focusable windows are accessible with the "Next", "Prev", and "All" commands.
+# (Typically, these are accessible windows on the current desktop and page.)
+SetEnv FLUVIOL_FOCUSABLE_WINDOW "$[FLUVIOL_CIRCULATABLE_WINDOW], CirculateHit"
+
+# Recallable windows are refocused when moving to a desktop page on which they
+# were previously focused. (We "recall" that we had focused them earlier.)
+SetEnv FLUVIOL_RECALLABLE_WINDOW "$[FLUVIOL_FOCUSABLE_WINDOW], !Sticky"
+
+#FIXME: Hmm; it'd be nicest, actually, to consider any window spawned from
+#another window as simply a window of the same abstract "group" and hence all
+#minimized and maximized as a group. No idea how to effect this, of course.
+# Groupable windows are focused and defocused as a group. That is, any
+#etEnv GROUPABLE_WINDOW "$[FLUVIOL_FOCUSABLE_WINDOW] ...?"
+
+# Overlappable windows do not shade other windows after gaining focus and are
+# not shaded after losing focus.
+SetEnv FLUVIOL_OVERLAPPABLE_WINDOW "\"Event Tester|FvwmIdent\""
+
+#FIXME: Rename to "FLUVIOL_INITIALLY_MAXIMIZED_WINDOW". All other names read
+#sensibly. *WAIT*. The "InitialMapCommand" style obsoletes this. Excise this.
+# Maximal windows are maximized on initial creation.
+SetEnv FLUVIOL_MAXIMAL_WINDOW "\"$[FLUVIOL_FLUAKE_NAME]|Emacs\""
+
+# Shady windows are shaded after losing focus.
+SetEnv FLUVIOL_SHADY_WINDOW "\"$[FLUVIOL_FLUAKE_NAME]|$[FLUVIOL_FOLQUE_NAME]\""
+
+# Temporary windows are destroyed after losing focus.
+SetEnv FLUVIOL_TEMPORARY_WINDOW "\"FvwmIdent\""
+
+# ....................{ WINDOW TYPES ~ fl[uak|ang]e        }....................
+# Conditions matching the Fluake console attached to the current desktop page.
+SetEnv FLUVIOL_FLUAKE "'$[FLUVIOL_FLUAKE_NAME]', $[FLUVIOL_FOCUSABLE_WINDOW]"
+
+# Conditions matching the Folque console attached to the current FVWM session.
+SetEnv FLUVIOL_FOLQUE \
+    "'$[FLUVIOL_FOLQUE_NAME]', AcceptsFocus, !Iconic, !Iconified"
+
+# ....................{ WINDOW STATES                      }....................
+# Reserve this state ID for recording the most recently focused window for every
+# desktop and desktop page.
+SetEnv FLUVIOL_IS_WINDOW_LAST_FOCUSED 8
+
+# --------------------( WASTELANDS                         )--------------------
+#FIXME: This is demonstrably horrible. We want to be importing from the current
+#directory and instead just running:
+#
+#    ImportFromCurrentDir config
+#
+#Not sure quite how
+
+#ImportFluviol "$[FLUVIOL_CONFIG_FILE]"
+#FIXME: This probably needs to read:
+#  If (EnvIsSet FLUVIOL_KEYMAP) PipeRead 'echo SetKeyNames$[FLUVIOL_KEYMAP]'
+#Incidentally, we could easily abstract this into a new "Eval" function: e.g.,
+#  If (EnvIsSet FLUVIOL_KEYMAP) Eval SetKeyNames$[FLUVIOL_KEYMAP]
+#Also, we should add an "OrDie" clause for safety.

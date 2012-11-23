@@ -1,0 +1,112 @@
+# -*- mode: fvwm -*-
+# ====================[ crystal                            ]====================
+#
+# --------------------( SYNOPSIS                           )--------------------
+# Fluviol Crystal, integrating Fluviol with FVWM-Crystal if installed.
+
+# ....................{ FVWM-CRYSTAL                       }....................
+# Augment Fluviol with an FVWM-Crystal-specific slew of functionality!
+DefineFunc CrystallizeFvwm
++ I CrystallizeFvwmDependencies
++ I CrystallizeFvwmRootMenu
+
+# Include FVWM-Crystal-specific functions and settings from their standard
+# locations - omitting only the functions and settings explicitly conflicting
+# with Fluvio, like "components/desktop/Keyboard" and
+# "components/apps/QuakeConsole".
+DefineFunc CrystallizeFvwmDependencies
+# Set the image path. FVWM resolves all relative path references to image files
+# against these paths.
++ I SetEnv Icon_Theme "Default"
++ I ImagePath $[FVWM_USERDIR]/icons/$[Icon_Theme]:$[FVWM_SYSTEMDIR]/icons/$[Icon_Theme]
+# Include essential FVWM-Crystal functions.
++ I Include components/desktop/FVWM-Crystal_Functions
+# Do not indiscriminently "Include components/desktop/FVWM-Crystal_Preferences";
+# that file includes a number of preferences that, frankly, either run poorly on
+# low-end systems ("LastChosenWindowDecoration") or are explicitly overriden by
+# this recipe ("DefaultDesktopManager", "DefaultFocusPolicy," "LastWallpaper").
+# The "LastChosenWindowDecoration" preferences, in particular, engender a trip-
+# wiring tripe of a race condition when switching desktop pages. The following
+# preferences are known to run decently; all others are suspect!
++ I LoadPreferences DefaultMusicPlayer
++ I LoadPreferences DefaultMixer
++ I LoadPreferences PrivilegedTerminals
++ I LoadPreferences LastChoosenColorset
+# Now, run through the trialing entrails of startup functionality.
++ I Append preferences/Startup
+# Preferred applications. (We ignore the FVWM-Crystal-supplied "QuakeConsole",
+# as the fluake Fluviol provides is significantly stabler.)
++ I Include components/functions/Screenshot-import
+# Load xscreensaver bindings? By default, no. Uncomment this if you want that.
+#+ I Include components/apps/XScreenSaver
+# Load desktop and window bindings.
++ I Include components/bindings/Desktop-RMB-OpenTerminal
++ I Include components/bindings/Desktop-MMB-EdgeScroll
++ I Include components/bindings/Desktop-MMB-TogglePanels
+# Use window thumbnails instead of simple icons on the desktop.
++ I Include components/desktop/Icon-Thumbnails
+#FIXME: One sane alternative might be to define a user-local
+#"components/functions/Keyboard-Modifiers" file setting the "Mod*" family of
+#environment variables to Super, or some such. That might then permit inclusion
+#of "components/desktop/Keyboard" as is done in conventional Crystal recipes.
+# Do not indiscriminently "Include components/desktop/FVWM-Crystal_Styles";
+# in the innards of its component recursion, this file binds Fluvio-conflicting
+# keyboard shortcuts. Rather, just load the necessary minima of styles. (Sadly,
+# "Application-Icons-22-32" conflicts with the folque and "FVWM" with both
+# the folque and fluake. Who knows, eh? The knifed dark is long and
+# hostile.)
++ I Append components/styles/Applications
++ I Include components/styles/Menu
+# Load cursor styles.
++ I Include components/styles/CursorStyle
++ I Include components/styles/CursorStyle-Border
+
+#FIXME: Many of the following icons undefined; see error messages in
+# ".xsession".
+DefineFunc CrystallizeFvwmRootMenu
+# Applications generator and main menu, using the external "fvwm-crystal.apps".
++ I PipeRead 'fvwm-crystal.apps --database=$[FVWM_DISTROMENUDIR]/Applications --database=$[FVWM_SYSTEMDIR]/Applications --database=$[FVWM_USERDIR]/Applications --search-icons-in=$[FVWM_USERDIR]/icons/$[Icon-Theme]/32x32/categories:$[FVWM_USERDIR]/icons/$[Icon-Theme]/32x32/apps:$[FVWM_SYSTEMDIR]/icons/$[Icon-Theme]/32x32/categories:$[FVWM_SYSTEMDIR]/icons/$[Icon-Theme]/32x32/apps:$[FVWM_DISTROMENUDIR]/icons/$[Icon-Theme]/32x32/categories:$[FVWM_DISTROMENUDIR]/icons/$[Icon-Theme]/32x32/apps --default-file-icon=32x32/apps/default.png --default-dir-icon=32x32/categories/directory.png --min-submenu-length=5 --sort=prio --no-panel --check-execs'
+# Main "diamond" menu.
++ I DestroyMenu /FVWM-Crystal
++ I AddToMenu /FVWM-Crystal '%22x22/fvwm-crystal/applications.png%$[gt.Applications]' Popup /Applications
++ I AddToMenu /FVWM-Crystal "" Nop
++ I AddToMenu /FVWM-Crystal '%22x22/fvwm-crystal/preferences-desktop-screensaver.png%$[gt.Screensaver]' Popup /Screensaver
++ I AddToMenu /FVWM-Crystal '%22x22/fvwm-crystal/camera-photo.png%$[gt.Screenshot]' Popup /Screenshot
++ I AddToMenu /FVWM-Crystal '%22x22/fvwm-crystal/audio-x-generic.png%$[gt.Music]' Popup /Music
++ I AddToMenu /FVWM-Crystal "" Nop
++ I AddToMenu /FVWM-Crystal '%22x22/fvwm-crystal/preferences-desktop-theme.png%$[gt.Window decorations]' Popup /Window-Decorations
++ I AddToMenu /FVWM-Crystal '%22x22/fvwm-crystal/colorsets.png%$[gt.Colorsets]' Popup /Colorsets
++ I AddToMenu /FVWM-Crystal '%22x22/fvwm-crystal/preferences-desktop-wallpaper.png%$[gt.Wallpaper]' Popup /Wallpaper
++ I AddToMenu /FVWM-Crystal '%22x22/fvwm-crystal/preferences-desktop.png%$[gt.Preferences]' Popup /Preferences
++ I AddToMenu /FVWM-Crystal "" Nop
++ I AddToMenu /FVWM-Crystal '%22x22/fvwm-crystal/applications-development.png%$[gt.Developer menu]' Popup /Developer
++ I AddToMenu /FVWM-Crystal '%22x22/fvwm-crystal/fvwm-crystal.png%$[gt.About FVWM-Crystal]' Include components/functions/About
++ I AddToMenu /FVWM-Crystal '%22x22/fvwm-crystal/system-log-out.png%$[gt.Exit]' Popup /Exit
+# Mouse binding for that menu.
++ I Mouse 1 R $[Mod0] Menu /FVWM-Crystal $[MenuPosition-BelowLeft]
+
+# ....................{ MAIN                               }....................
+CrystallizeFvwm
+
+# --------------------( WASTELANDS                         )--------------------
+
+# --------------------( COPYRIGHT AND LICENSE              )--------------------
+# The information below applies to everything in this distribution,
+# except where noted.
+#
+# Copyright 2007-2012 by Cecil Curry.
+#
+#   http://www.raiazome.com
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.

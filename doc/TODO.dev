@@ -1,0 +1,88 @@
+# ====================[ TODO                               ]====================
+#
+# * Create a default root menu, if not operating under Crystal, to ensure easy
+#   access to the FVWM shutdown and recipe reload operations. This should be
+#   accessible via the bang-bar as well of course. For a sensible example
+#   utilizing "zenity," see:
+#   http://www.cl.cam.ac.uk/~pz215/fvwm-scripts/config
+# * Correct the current (massively bad) implementation of "groupable windows":
+#   especially, for GiMP.
+# * Consider providing support for "Nitrogen," a lightweight Feh-alternative
+#   finding increasing favorability, online.
+# * Improve FVWM-Crystal compatibility by integrating with FVWM-Crystal's
+#   default terminal settings.
+# * Improve robustness. Mimic "Daemonize" elsewhere, particularly for
+#   "$[FLUVIOL_XTERM_COMMAND]" to ensure that program exists prior to running.
+# * Extract configuration into a new "Fluvio.conf" file, to be loaded by this
+#   file. Also, extricate the FVWM-Crystal section in a new file as well, since
+#   its contents have no relation to the rest of this file and only bloat.
+# * Produce a proper tarball distribution and accompanying makefile. That
+#   makefile will, probably, just copy files to appropriate target paths.
+# * Produce a proper ebuild and commit to the Sunrise overlay. 
+# * Install a sensible window tiling policy.
+# * Ensure the current date and time for the system is sensible: e.g., more
+#   recent than the year 2000. Systems having improper dates will result in
+#   wallpaper rotation failures, among other things. (If not sensible, print a
+#   graphical warning and disable wallpaper rotation. "zenity" could be a sane
+#   application for doing this; alternatively, what about the gtk2-perl
+#   bindings?)
+# * I like the name "Fluvio," but I don't like the "Fluvio." It has no
+#   relation to FVWM. Rather, since the 'F' in FVWM is formally undefined, let
+#   us select a name beginning with that. Indeed, grepping dict.org for 
+#   "^f.+v", I find the following intriguing words:
+#   - flammivomous (Vomiting flames, as a volcano.)
+#   - fluvial (Belonging to rivers; growing or living in streams or ponds.)
+#   - fovea (A slight depression or pit; a fossa.)
+#   - fovilla (One of the fine granules contained in the protoplasm of a
+#              pollen grain.)
+#   These words could combine with "WM" so as to produce neologisms resembling:
+#   - FlammiVWM.
+#   - FluVialWM.
+#   - FluviaWM.
+#   - FoveaWM.
+#   - FovillaWM.
+#   I quite like FluVialWM, particularly as the former two components "Flu" and
+#   "Vial" are words themselves. Here is a humorous alternative, so as to avoid
+#   unpronouncable strings of consonants: "Fluvi-wima". Oh! Nice. I think I've
+#   found it: "Fluvio-wima." "Fluvio-glacial" is a compound noun describing
+#   water created by the melting of glaciers. Bloody nice. "Fluvio-wima!" Har.
+#   Possibilities include:
+#   - Fluvia-wima
+#   - Fluvio-wima (or "Fluvio-WM")
+#   - Fovea-wima
+#   - Fovilla-wima
+#   Fluvio-WM is particularly compelling, having both a unique subword ("Fluvio")
+#   not yet branded by any other entity and environmental implications.
+# * Automatically adjust keys according to whether or not Dvorak is the current
+#   keymap. Inspect "xkb" at runtime to ascertain this. Then, define 26
+#   environment variables $[A], $[B], ... $[Z] corresponding to these keys, and
+#   assign them values according to whether or not Dvorak is the current keymap.
+#   (Very nice, yes?)
+# * Consider integrating with formal themes from http://box-look.org, such as
+#   the very keen Lethe at:
+#   http://www.box-look.org/content/show.php/Lethe?content=91022
+# * Consider integrating with "notify-osd," a fantastic framework for OSD
+#   display popularized under the Ubuntu distro.
+# * Abstract /etc/zsh* into files under "Fluvio.zsh/"; then, open new Kuake
+#   consoles against a custom ZDOT="./Fluvio.zsh/". Great idea!
+# * Fantastic ideas at http://humanreadable.nfshost.com/sdeg/xfce_improvements.htm
+#   for bringing non-KDE windowing managers up to the professional quality of
+#   KDE: mostly, by obtaining non-KDE alternatives to commonplace KDE
+#   applications. Sound recommendations, most of which are lightweight enough
+#   to be specified as "suggestions" in the Fluvio exheres.
+# * Integrate with "transset" for proper transparency, ala:
+#   xcompmgr -c -t-5 -l-5 -r4.2 -o.55 -f &
+#   transset .7
+#   Wait. "transset" has been supplanted by "transset-df", according to recent
+#   blog posts: e.g., "All one needs is to have X compiled with composite support
+#   (USE="xcomposite" in Gentoo) and two small X applications
+#       * xcompmgr — a lightweight compositing manager
+#       * transset-df — an application with which one can select the desired
+#         transparency levels (this is a patched/improved version of the original
+#         X.org's transset)
+#           Although xcompmgr does not have all the nifty effects as KDE or GNOME
+#           or Compiz do, it does pack real transparent windows (as well as panels
+#           etc.), basic shadows and a few more tricks."
+# * Add folque support for KDE's "systemsettings" control panel. I believe
+#   the GNOME equivalent is "gnome-control-center", though I don't appear to
+#   have the latter installed.

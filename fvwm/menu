@@ -1,0 +1,46 @@
+# -*- mode: fvwm -*-
+# ====================[ menu                               ]====================
+#
+# --------------------( LICENSE                            )--------------------
+# Copyright 2007-2012 by Cecil Curry.
+# See "COPYING" for additional details.
+#
+# --------------------( SYNOPSIS                           )--------------------
+# Handle FVWM menus.
+
+# ....................{ DEFINERS                           }....................
+#FIXME: Add simple menu translucency as well; see great discussion at:
+#    http://zensites.net/fvwm/guide/menu.html
+#That said, "man fvwm" lists no "Translucent" option. Google us a new solution.
+
+# void DefineMenu(string menuName, string menuDescription, string menuCode)
+#
+# Define the passed function with the passed implementation.
+DefineFunc DefineMenu
++ I DestroyMenu $0
++ I   AddToMenu $*
+
+# ....................{ MENUS                              }....................
+
+# As a fallback in the inevitable event of catastrophic resolution change, add a
+# menu switching between commonly supported resolutions.
+DefineMenu SetScreenResolution 'Screen Resolution'
++ '&1 1440x900 (default)' SetScreenResolution 1440x900
++ '&2 1366x768'  SetScreenResolution 1366x768
++ '&2 1360x768'  SetScreenResolution 1360x768
++ '&2 1280x1024' SetScreenResolution 1280x1024
++ '&2 1280x960'  SetScreenResolution 1280x960
++ '&2 1280x800'  SetScreenResolution 1280x800
++ '&2 1280x768'  SetScreenResolution 1280x768
++ '&2 1152x864'  SetScreenResolution 1152x864
++ '&2 1024x768'  SetScreenResolution 1024x768
++ '&2 1024x576'  SetScreenResolution 1024x576
++ '&2 848x480'   SetScreenResolution 848x480
++ '&2 832x624'   SetScreenResolution 832x624
++ '&2 800x600'   SetScreenResolution 800x600
++ '&2 720x400'   SetScreenResolution 720x400
++ '&2 640x480'   SetScreenResolution 640x480
+
+# --------------------( WASTELANDS                         )--------------------
+#DestroyMenu MenuSetScreenResolution
+#AddToMenu   MenuSetScreenResolution 'Screen Resolution'

@@ -1,0 +1,23 @@
+# -*- mode: fvwm -*-
+# ====================[ mouse                              ]====================
+#
+# --------------------( LICENSE                            )--------------------
+# Copyright 2007-2012 by Cecil Curry.
+# See "COPYING" for additional details.
+#
+# --------------------( SYNOPSIS                           )--------------------
+# Define mouse button bindings. In FVWM, such bindings assume the format:
+#
+#   Mouse $[ButtonNumber] $[Context] $[KeyModifiers] $[FunctionToCall]
+
+#FIXME: Define new BindMouse() function.
+
+# ....................{ ROOT WINDOW                        }....................
+#Mouse  
+
+# ....................{ GENERAL                            }....................
+# Bind <Super-Alt-Esc> to reload the current recipe.
+Bind Escape $[FLUVIOL_MOD_SUPER]$[FLUVIOL_MOD_ALT] \
+    Restart
+
+# --------------------( WASTELANDS                         )--------------------

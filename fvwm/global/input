@@ -1,0 +1,101 @@
+# -*- mode: fvwm -*-
+# ====================[ input                              ]====================
+#
+# --------------------( LICENSE                            )--------------------
+# Copyright 2007-2012 by Cecil Curry.
+# See "COPYING" for additional details.
+#
+# --------------------( SYNOPSIS                           )--------------------
+# Define input device-specific globals.
+
+# ....................{ GENERAL                            }....................
+# Don't consider <Caps Lock>, <Num Lock>, or <Scroll Lock> to be FVWM modifiers.
+# We do this before doing anything else, to ensure consistent sanity everywhere.
+IgnoreModifiers L
+
+# Window contexts.
+SetEnv FLUVIOL_CONTEXT_ANY     A
+SetEnv FLUVIOL_CONTEXT_DESKTOP D
+SetEnv FLUVIOL_CONTEXT_ROOT    R
+SetEnv FLUVIOL_CONTEXT_WINDOW  W
+SetEnv FLUVIOL_CONTEXT_WINDOW_FRAME         S
+SetEnv FLUVIOL_CONTEXT_WINDOW_FRAME_TOP     -
+SetEnv FLUVIOL_CONTEXT_WINDOW_FRAME_BOTTOM  _
+SetEnv FLUVIOL_CONTEXT_WINDOW_FRAME_LEFT    [
+SetEnv FLUVIOL_CONTEXT_WINDOW_FRAME_RIGHT   ]
+SetEnv FLUVIOL_CONTEXT_WINDOW_FRAME_CORNERS F
+SetEnv FLUVIOL_CONTEXT_WINDOW_ICON          I
+SetEnv FLUVIOL_CONTEXT_WINDOW_TITLEBAR      T
+
+# ....................{ KEYS                               }....................
+# Key modifiers.
+SetEnv FLUVIOL_MOD_NONE    N
+SetEnv FLUVIOL_MOD_ANY     A
+SetEnv FLUVIOL_MOD_SHIFT   S
+SetEnv FLUVIOL_MOD_CTRL    C
+SetEnv FLUVIOL_MOD_ALT     M
+SetEnv FLUVIOL_MOD_NUMLOCK 2
+SetEnv FLUVIOL_MOD_SUPER   4
+
+#FIXME: Hmm, really?
+# Alias the Super key to its customary Unix name, "Super_L."
+SetEnv FLUVIOL_KEY_MODIFIER_SUPER_UNIX Super_L
+
+DefineFunc SetKeyNamesQwerty
++ I Log loading Qwerty keymap...
++ I SetEnv FLUVIOL_KEY_Q q
++ I SetEnv FLUVIOL_KEY_W w
++ I SetEnv FLUVIOL_KEY_E e
++ I SetEnv FLUVIOL_KEY_R r
++ I SetEnv FLUVIOL_KEY_A a
++ I SetEnv FLUVIOL_KEY_S s
++ I SetEnv FLUVIOL_KEY_D d
++ I SetEnv FLUVIOL_KEY_F f
++ I SetEnv FLUVIOL_KEY_H h
++ I SetEnv FLUVIOL_KEY_J j
++ I SetEnv FLUVIOL_KEY_K k
++ I SetEnv FLUVIOL_KEY_L l
++ I SetEnv FLUVIOL_KEY_Z z
++ I SetEnv FLUVIOL_KEY_X x
++ I SetEnv FLUVIOL_KEY_C c
++ I SetEnv FLUVIOL_KEY_V v
++ I SetEnv FLUVIOL_KEY_LESS_THAN less
++ I SetEnv FLUVIOL_KEY_GREATER_THAN greater
+
+DefineFunc SetKeyNamesDvorak
++ I Log loading Dvorak keymap...
++ I SetEnv FLUVIOL_KEY_Q apostrophe
++ I SetEnv FLUVIOL_KEY_W comma
++ I SetEnv FLUVIOL_KEY_E period
++ I SetEnv FLUVIOL_KEY_R p
++ I SetEnv FLUVIOL_KEY_A a
++ I SetEnv FLUVIOL_KEY_S o
++ I SetEnv FLUVIOL_KEY_D e
++ I SetEnv FLUVIOL_KEY_F u
++ I SetEnv FLUVIOL_KEY_H d
++ I SetEnv FLUVIOL_KEY_J h
++ I SetEnv FLUVIOL_KEY_K t
++ I SetEnv FLUVIOL_KEY_L n
++ I SetEnv FLUVIOL_KEY_Z semicolon
++ I SetEnv FLUVIOL_KEY_X q
++ I SetEnv FLUVIOL_KEY_C j
++ I SetEnv FLUVIOL_KEY_V k
++ I SetEnv FLUVIOL_KEY_LESS_THAN w
++ I SetEnv FLUVIOL_KEY_GREATER_THAN v
++ I SetEnv FLUVIOL_KEY_PRINT Print
+
+# ....................{ MICE                               }....................
+#FIXME: Should obviously depend on how many buttons the "first" attached
+#pointing device has. Or does X.org *ALWAYS* assign a second button to index 3
+#if only two buttons are available?
+
+# Mouse button indices.
+SetEnv FLUVIOL_MOUSE_BUTTON_ANY    0
+SetEnv FLUVIOL_MOUSE_BUTTON_LEFT   1
+SetEnv FLUVIOL_MOUSE_BUTTON_MIDDLE 2
+SetEnv FLUVIOL_MOUSE_BUTTON_RIGHT  3
+
+# --------------------( WASTELANDS                         )--------------------
+#FIXME: Hmm. Really? We probably want to define the core key binding-specific
+#globals defined here *BEFORE* importing user configurations, which might
+#reasonably reference such globals.

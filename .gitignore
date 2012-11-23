@@ -1,0 +1,11 @@
+# ====================[ .gitignore                         ]====================
+#
+# --------------------( SYNOPSIS                           )--------------------
+# Avoid committing paths matching the following glob expressions.
+
+# ....................{ TEMPORARIES                        }....................
+cache
+zsh/history
+zsh/folque
+*~
+*.sw?

@@ -1,0 +1,259 @@
+# -*- mode: fvwm -*-
+# ====================[ config                             ]====================
+#
+# --------------------( LICENSE                            )--------------------
+# Copyright 2007-2012 by Cecil Curry.
+# See "COPYING" for additional details.
+#
+# --------------------( SYNOPSIS                           )--------------------
+# User-specific Fluviol configuration.
+#
+# --------------------( TODO                               )--------------------
+# * Rename "_ARGUMENTS" everywhere to "_ARGS".
+
+# ....................{ KEYMAP                             }....................
+#FIXME: Actually implement "Auto". And the other two are pretty half-@ssed at
+#the moment, as well.
+# Fluviol-specific keyboard keymap to be used. Setting this has no bearing on
+# the current "xkb"-enabled keymap. Permissible values include:
+#
+# * "Auto", the current keymap according to "xkb".
+# * "Qwerty", the Qwerty keymap as under most physical keyboard layouts.
+# * "Dvorak", the Dvorak keymap.
+SetEnv FLUVIOL_KEYMAP Dvorak
+
+# ....................{ X.ORG =xrandr                      }....................
+# The [X].org [R]esize [and] [R]otate Extension [XRandR] permits dynamic
+# adjustment of display properties. Happily, it provides a command-line
+# interface that Fluviol passes the configuration settings below to.
+#
+# Note that XRandR may or may not support your specific display device. If this
+# is the case, you may still statically adjust these properties via manual
+# changes to "/etc/X11/xorg.conf".
+
+#FIXME: Unconvinced this is a good idea. But perhaps it is. Contemplate.
+# [D]ots [p]er [i]nch (DPI) provides a display-dependent measure of pixel size.
+# Increasing this number from its default "96" increases fonts and images size;
+# decreasing this number decreases the same.
+#SetEnv FLUVIOL_XRANDR_DPI 120
+
+# ....................{ XTERM                              }....................
+# The "xterm" replacement (i.e., vt102-style terminal emulator) to be used for
+# creating new console windows. Specifically, this is a program to be run for
+# creating new Fluakes and the Folque.
+#
+# The default replacement is "urxvtc," the URxvt (Unicode Rxvt) terminal
+# emulator's program for making new client URxvt windows.
+#
+# Recommended terminals include:
+#
+#   Command | Window Class | Exherbo and Gentoo Installation
+#   --------+--------------+--------------------------------
+#   urxvtc  | URxvt        | paludis -i rxvt-unicode
+#   aterm   | Aterm        | paludis -i aterm
+#
+# URxvt supports psuedo-transparency, although that requires configuration.
+# This is beyond the scope of this recipe; for details, see:
+#
+#   http://arun.wordpress.com/2008/03/15/real-transparency-in-urxvt/
+SetPreferredCommand FLUVIOL_XTERM_COMMAND "urxvtc urxvt aterm eterm"
+
+# Command-line arguments to be passed to $[FLUVIOL_XTERM_COMMAND] whenever that program
+# is run to create a new console window.
+#
+# Note that for the default $[FLUVIOL_XTERM_COMMAND], "urxvtc", the "-geometry"
+# argument accepts a string WxH+X+Y where W and H state the new window's
+# horizontal and vertical dimension in percentage of the entire screen while
+# X and Y state the new window's upper-left hand coordinates in, also,
+# percentage of the entire screen.
+SetEnv FLUVIOL_XTERM_COMMAND_ARGUMENTS "-geometry +0+0"
+
+# ....................{ FLUAKE                             }....................
+# Fluakes are Quake-like consoles that, as in that venerate game, toggle
+# to visiblity on hitting some key--typically, <Super-Space>.
+#
+# Fluakes typically provide only one console per running X.org session.
+# Fluakes in Fluvio, on the other hand, provide one console per desktop
+# page per running X.org session; thus, each desktop page has its own unique
+# Fluake.
+
+#FIXME: Hmm; I reckon we should probably force "zsh" under Folque. Otherwise,
+#nothing works as expected. For Fluake, permitting non-Zsh shells is fine.
+#Hence, rename "FLUVIOL_FLUAKE_SHELL_COMMAND".
+
+# Shell to run on Fluake consoles.
+SetPreferredCommand FLUVIOL_SHELL_COMMAND "zsh fish bash tcsh csh ksh sh"
+
+# ....................{ FOLQUE                             }....................
+# Folques are single-line, small-width consoles that, as with Fluakes,
+# toggle to visibility on hitting some key--typically, <Super-Enter>.
+#
+# Folques provide a keyboard-driven, console-powered alternative to Start
+# menus, icon bars, docks, and similiarly mouse-driven, GUI-powered devices for
+# launching applications. Considering the simplicity of this task--that is,
+# launching applications--we consider the simpler solutions the better. In this
+# problem, the Folque gives the simplest of all solutions. On toggling
+# visible, the Folque gives a single-line, small-width console onto which one-
+# off, one-time commands can be entered; and new applications thereby launched.
+# (To launch an instance of Firefox onto the current desktop page, for example,
+# one might enter the Folque by typing <Super-Enter>ff<Enter>.
+#
+# Bang! The Folque automatically shades and hides itself, and gives the focus
+# to the opened instance of Firefox.)
+#
+# Folques provide only one console per running X.org session. Fluakes,
+# on the other hand, provide provide one console per desktop page per running
+# X.org session. One Folque is shared across every desktop page, in keeping
+# with the single easiness of its task (of launching applications).
+
+# External shell environment under which to call the above shell: that is,
+# environment variables with which to initialize the above shell.
+#
+# By default, this specifies a new ZDOTDIR environment variable. This is a
+# variable specific to ZSH. Usually, this variable defaults to "$[HOME]" (e.g.,
+# your home directory, "~/"). ZSH locates startup shell scripts in this directory
+# on ZSH startup and, when found, sources them as appropriate. For example, if ZSH
+# is run as a login shell, it searches for a shell script named ".zshrc" under
+# this directory and, when found, sources that. This is usually the file
+# "~/.zshrc", when ZDOTDIR is left at its default value of "$[HOME]".
+#
+# By setting ZDOTDIR to a custom path, we ensure that, when running ZSH
+# as the login shell of a new terminal window representing the Folque, it
+# searches for a shell script named ".zshrc" in this directory instead and,
+# when found, executes that script. ".zshrc" in this directory should be a
+# shell script establishing Folque-specific aliases, functions, and other
+# shortcut commands.
+#
+# Fluviol recommends you customize this shell script. For example:
+#
+#  # -~+================[ bang/.zshrc                          ]================+~-
+#  # Folque-specific startup script for ZSH.
+#
+#  # :;,................{ GAME SHORTCUTS                       }................,;:
+#  alias dunnet="emacs -batch -l dunnet &"
+#
+#  # :;,................{ HTTP SHORTCUTS                       }................,;:
+#  alias firefox="\firefox 1> /dev/null 2>&1 &"
+#  alias links="\links -g &"
+#
+#  # :;,................{ WORD SHORTCUTS                       }................,;:
+#  alias abiword="\abiword --nosplash 1> /dev/null 2>&1 &"
+#
+#  # :;,................{ BANG PROMPT                          }................,;:
+#  # Make a very simple, small prompt.
+#  export PS1="! "
+#
+#  # :;,................{ MODULES                              }................,;:
+#  # Enable TAB-completion.
+#  autoload -U compinit
+#  compinit
+
+# Window position and size assigned to Folque on creation. This is a
+# set of four arguments to be passed to FVWM's "ResizeMove" function, in which
+# the first and second arguments are this window's initial width and height and
+# the second and third arguments are this window's initial upper left X and Y
+# coordinate. See "man fvwm" for details.
+#
+# By default, this positions the Folque on the bottom edge of the screen,
+# maximizes its width, and minimizes its height to only three character rows.
+# Note that "48c" corresponds to two character rows and "52c" corresponds to
+# three character rows, for whatever odd reason.
+SetEnv FLUVIOL_FOLQUE_SIZE_POSITION "100 52c 0 -0"
+
+# ....................{ WALLPAPER ROTATION                 }....................
+# Rotate every wallpaper on every page, every hour. (Adjust this time in
+# milliseconds up or down, as you see capably fit.)
+SetEnv FLUVIOL_WALLPAPER_SCHEDULE_MS 3600000
+SetEnv FLUVIOL_WALLPAPER_SCHEDULE_ID 32
+
+# ....................{ VOLUME CONTROL                     }....................
+#FIXME: Do I still use this? I probably should. It looks sweet! But... probably
+#just use "notify-osd" instead, yes?
+
+# External program used to adjust system volume.
+#
+# By default, this is a PyGTK (Python GTK+2) script named changevol. This script
+# shows an OSD (on-screen display) widget providing command-line access to
+# volume control and displaying that volume on each command-line access. It
+# integrates cleanly with ALSA, and is freely available from:
+#
+#     http://www.raiazome.com/changevol
+#
+# That said, "alsamixer" and "aumix" are also good choices for this option.
+# These are command-line driven volume mixers that, like changevol, provide
+# command-line access to volume control but unlike that script do not display
+# that volume when changed.
+#SetFile FLUVIOL_VOLUME_COMMAND "$[FLUVIOL_BIN_PATH]/changevol"
+SetFile FLUVIOL_VOLUME_COMMAND "changevol"
+
+# External commands used to mute, increase, and decrease system volume.
+SetEnv FLUVIOL_MUTE_VOLUME_COMMAND  "$[FLUVIOL_VOLUME_COMMAND] --toggle"
+SetEnv FLUVIOL_RAISE_VOLUME_COMMAND "$[FLUVIOL_VOLUME_COMMAND] --increase 1"
+SetEnv FLUVIOL_LOWER_VOLUME_COMMAND "$[FLUVIOL_VOLUME_COMMAND] --decrease 1"
+
+# ....................{ WALLPAPER ROTATION                 }....................
+# Rotate wallpaper from this source directory. This directory should have as
+# many subdirectories as you have desktop pages. For the default "DesktopSize"
+# geometry, defined below, of 3 pages across and 3 pages down per desktop, for a
+# total 9 pages per desktop, this implies that this directory should have 9
+# subdirectories. For example, I mount an external hard-drive at "/media/sda1"
+# having wallpaper at "/media/sda1/image/sijun", having these 9 subdirectories:
+#
+#   /media/sda1/image/sijun/darkness
+#   /media/sda1/image/sijun/humanity
+#   /media/sda1/image/sijun/light
+#   /media/sda1/image/sijun/of_water
+#   /media/sda1/image/sijun/of_wind
+#   /media/sda1/image/sijun/of_wood
+#   /media/sda1/image/sijun/the_future
+#   /media/sda1/image/sijun/the_past
+#   /media/sda1/image/sijun/the_present
+#
+# These images may be of any format supported by the "WALLPAPER_SET_COMMAND"
+# you define below. Typically, this is .GIF, .JPG, .PNG, and .XPM. (YMMV.)
+#
+# The "RotateWallpaper" function, below, randomly selects one image from the
+# first subdirectory as wallpaper for your first desktop page, one from the
+# second subdirectory as wallpaper for your second desktop page, and so forth.
+#
+# Given the default "DesktopSize" geometry (of 3 pages across and 3 pages down
+# per desktop), this randomly selects one image from each of the 9
+# subdirectories above onto the 9 desktop pages, as follows:
+#
+# ,-----------------------------------------------------------.
+# | "../darkness/"    | "../humanity/"    | "../light/"       |
+# -------------------------------------------------------------
+# | "../of_water/"    | "../of_wind/"     | "../of_wood/"     |
+# -------------------------------------------------------------
+# | "../the_future/"  | "../the_past/"    | "../the_present/" |
+# '-----------------------------------------------------------'
+#
+# Thus, each desktop page obtains a unique look and feel, in accordance with the
+# subdirectory of wallpaper images assigned to that page.
+#
+# See "RotateWallpaper" for more details.
+SetEnv FLUVIOL_WALLPAPER_HOME "$[HOME]/pub/image/sijun"
+
+#FIXME: Add support for, in order of efficiency and capability:
+#wmsetbg feh habak hsetroot chbg display qiv xv xsri xli xsetbg xsetroot
+# Rotate wallpaper by calling this external command. For low-end machines
+# (notably, the iBook G3 500Mhz under which I run), we recommend you install
+# Esetroot; and use Esetroot to rotate wallpaper. (For Gentoo users, install
+# Esetroot with "emerge eterm".) For higher-end machines, you may find one or
+# more of the following to your liking:
+#
+#   Command         | Gento Installation
+#   ----------------+-------------------
+#   Esetroot -fit   | emerge eterm
+#   feh --bg-center | emerge feh
+#   habak -mC -hi   | emerge habak
+#
+# Esetroot performs well with both low- and high-end hardware. All others
+# performed poorly on my (frankly, low-end) laptop, adding roughly 500ms to
+# desktop page-switch time. As recommendation, also note the "awsetbg" wrapper
+# bundled with the Awesome window manager preferably selects Esetroot.
+SetPreferredCommand FLUVIOL_WALLPAPER_COMMAND "Esetroot feh habak"
+
+# --------------------( WASTELANDS                         )--------------------
+# This is often a restricted shell, so as to prevent execution of dangerous
+# commands from the Folque.

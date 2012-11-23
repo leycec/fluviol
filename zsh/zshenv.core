@@ -1,0 +1,47 @@
+#!/bin/zsh
+# ====================[ zshenv.core                        ]====================
+#                     [ Time-stamp: "2009-04-18 19:29:24 leycec" ]
+#
+# --------------------( SYNOPSIS                           )--------------------
+# Run before all other Zsh shell scripts, for all shell types. This script
+# exports core variables crucial to executing all other scripts.
+
+# ....................{ VARIABLES                          }....................
+# Boolean informing callers that this file has been sourced already, and should
+# thus not be sourced again.
+ZSHENV_CORE_SOURCED=1
+
+# ZshRC home directory. Defaults to the current script's directory.
+[[ -n "${ZSHRC_HOME}" ]] || 
+    export ZSHRC_HOME=$(readlink --canonicalize-existing $(dirname "${0}"))
+
+# Zeshy home directory.
+#
+# Zeshy is a Zsh framework exporting high-level function utilities.
+[[ -n "${ZESHY_HOME}" ]] || 
+    export ZESHY_HOME="${ZSHRC_HOME}/zeshy"
+
+# ....................{ MAIN                               }....................
+echo "zeshy: loading \"${ZSHRC_HOME}/zshenv.core\"..."
+
+# --------------------( COPYRIGHT AND LICENSE              )--------------------
+# The information below applies to everything in this distribution,
+# except where noted.
+#              
+# Copyleft 2007-2010 by Cecil Curry.
+#   
+#   http://www.raiazome.com
+# 
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+

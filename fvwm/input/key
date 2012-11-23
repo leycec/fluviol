@@ -1,0 +1,241 @@
+# -*- mode: fvwm -*-
+# ====================[ key                                ]====================
+#
+# --------------------( LICENSE                            )--------------------
+# Copyright 2007-2012 by Cecil Curry.
+# See "COPYING" for additional details.
+#
+# --------------------( SYNOPSIS                           )--------------------
+# Define key bindings. In FVWM, key bindings assume the format:
+#
+#   Key $[KeyName] $[WindowContext] $[KeyModifiers] $[FunctionToCall]
+#
+# Since $[WindowContext] is typically "$[FLUVIOL_CONTEXT_ANY]", Fluviol
+# provides a convenience function Bind() reducing such format to:
+#
+#   Bind $[KeyName] $[KeyModifiers] $[FunctionToCall]
+#
+# $[KeyName] is either a case-sensitive alphanumeric character (e.g., "a", "T",
+# "0") or one of the following case-sensitive screens:
+#
+# #FIXME: Complete me.
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# | keyboard key               | FVWM key name                                |
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# | >                          | greater                                      |
+# | <                          | less                                         |
+# | .                          | period                                       |
+# | ,                          | comma                                        |
+# | ;                          | semicolon                                    |
+# | '                          | apostrophe                                   |
+# | Backspace                  | BackSpace                                    |
+# | Enter, Return              | Return                                       |
+# | Esc                        | Escape                                       |
+# | Print Screen               | Print                                        |
+# | Space                      | Space                                        |
+# | Lower Volume               | XF86AudioLowerVolume                         |
+# | Raise Volume               | XF86AudioRaiseVolume                         |
+# | Mute  Volume               | XF86AudioRaiseMute                           |
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# $[KeyModifiers] is either "$[FLUVIOL_MOD_NONE]" signifying no
+# modifier or one or more of the following:
+#
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# | keyboard key       | FVWM variable                                        |
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# | Alt                | $[FLUVIOL_MOD_ALT]                          |
+# | Ctrl               | $[FLUVIOL_MOD_CTRL]                         |
+# | Shift              | $[FLUVIOL_MOD_SHIFT]                        |
+# | Windows, Apple*    | $[FLUVIOL_MOD_SUPER]                        |
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# * Why no Penguin key?
+#
+# Lastly, $[FunctionToCall] is the name of the FVWM function to bind to that
+# keyboard combination -- typically, a Fluviol FVWM function.
+#
+# --------------------( TODO                               )--------------------
+# * Be great to add right-click menu for terminal applications (e.g., URxvt)
+#   providing cut, copy, and paste operations.
+
+#FIXME: Rename Bind() to BindKey().
+
+# ....................{ GENERAL                            }....................
+# Bind <Super-Alt-Esc> to reload the current recipe.
+Bind Escape $[FLUVIOL_MOD_SUPER]$[FLUVIOL_MOD_ALT] \
+    Restart
+
+# Bind <Super-Alt-Ctrl-Esc> to close FVWM and end the current session.
+Bind Escape $[FLUVIOL_MOD_SUPER]$[FLUVIOL_MOD_ALT]$[FLUVIOL_MOD_CTRL] \
+    Quit
+
+# Bind <Super-Space> to toggle the Fluake console for the current page.
+Bind Space $[FLUVIOL_MOD_SUPER] \
+    ToggleOrMakeFluake
+
+# Bind <Super-Return> to toggle the Folque console.
+Bind Return $[FLUVIOL_MOD_SUPER] \
+    ToggleOrMakeFolque
+
+# Bind <Super-Shift-Return> to kill the Folque console.
+Bind Return $[FLUVIOL_MOD_SUPER]$[FLUVIOL_MOD_SHIFT] \
+    KillFolque
+
+# Bind <Super-Alt-Return> to rotate wallpapers.
+Bind Return $[FLUVIOL_MOD_SUPER]$[FLUVIOL_MOD_ALT] \
+    RotateWallpapers
+
+# Bind <Super-Alt-Backspace> to kill the application hosting the current window.
+Bind BackSpace $[FLUVIOL_MOD_SUPER]$[FLUVIOL_MOD_ALT] \
+    Silent Close
+
+# Bind <Super-Alt-Ctrl-Backspace> to *FORCEFULLY* kill that application instead.
+Bind BackSpace $[FLUVIOL_MOD_SUPER]$[FLUVIOL_MOD_ALT]$[FLUVIOL_MOD_CTRL] \
+    Silent Destroy
+
+# Bind <Super->> and <Super-<> (that is, <Super-Greater Than> and
+# <Super-Less Than>) to maximize and minimize the current window, respectively.
+Bind $[FLUVIOL_KEY_GREATER_THAN] $[FLUVIOL_MOD_SUPER] \
+    CurrentWindow ToggleWindowMaximization
+Bind $[FLUVIOL_KEY_LESS_THAN] $[FLUVIOL_MOD_SUPER] \
+    CurrentWindow ToggleWindowShading
+
+# Bind <Super-h>, <Super-j>, <Super-k>, and <Super-l> to move the current window
+# left, down, up, and right, respectively.
+Bind $[FLUVIOL_KEY_H] $[FLUVIOL_MOD_SUPER] \
+    CurrentWindow Move w-$[WINDOW_MOVE_DISTANCE] keep
+Bind $[FLUVIOL_KEY_J] $[FLUVIOL_MOD_SUPER] \
+    CurrentWindow Move keep w+$[WINDOW_MOVE_DISTANCE]
+Bind $[FLUVIOL_KEY_K] $[FLUVIOL_MOD_SUPER] \
+    CurrentWindow Move keep w-$[WINDOW_MOVE_DISTANCE]
+Bind $[FLUVIOL_KEY_L] $[FLUVIOL_MOD_SUPER] \
+    CurrentWindow Move w+$[WINDOW_MOVE_DISTANCE] keep
+
+# Bind <Super-Alt-h>, <Super-Alt-j>, <Super-Alt-k>, and <Super-Alt-l> to
+# shrink the current window left, down, up, and right, respectively.
+Bind $[FLUVIOL_KEY_H] $[FLUVIOL_MOD_SUPER]$[FLUVIOL_MOD_ALT] \
+    CurrentWindow Resize w-$[WINDOW_RESIZE_DISTANCE] keep
+Bind $[FLUVIOL_KEY_J] $[FLUVIOL_MOD_SUPER]$[FLUVIOL_MOD_ALT] \
+    CurrentWindow Resize keep w+$[WINDOW_RESIZE_DISTANCE]
+Bind $[FLUVIOL_KEY_K] $[FLUVIOL_MOD_SUPER]$[FLUVIOL_MOD_ALT] \
+    CurrentWindow Resize keep w-$[WINDOW_RESIZE_DISTANCE]
+Bind $[FLUVIOL_KEY_L] $[FLUVIOL_MOD_SUPER]$[FLUVIOL_MOD_ALT] \
+    CurrentWindow Resize w+$[WINDOW_RESIZE_DISTANCE] keep
+
+# Assuming every desktop is a 3x3 matrix of pages, this allows navigation between
+# those pages via the following "matrix" of key bindings:
+# ,-----------------------------------------------.
+# | <Super-q>     | <Super-w>     | <Super-e>     |
+# -------------------------------------------------
+# | <Super-a>     | <Super-s>     | <Super-d>     |
+# -------------------------------------------------
+# | <Super-z>     | <Super-x>     | <Super-c>     |
+# '-----------------------------------------------'
+#
+# ...where <Super-${KEY}>, above, means holding the left or right Super/Command
+# key when typing ${KEY}. In this manner, there is a one-to-one mapping between
+# key bindings for desktop page access and layout of desktop pages.
+Bind $[FLUVIOL_KEY_W] $[FLUVIOL_MOD_SUPER] GotoPage 0 0
+Bind $[FLUVIOL_KEY_E] $[FLUVIOL_MOD_SUPER] GotoPage 0 1
+Bind $[FLUVIOL_KEY_R] $[FLUVIOL_MOD_SUPER] GotoPage 0 2
+Bind $[FLUVIOL_KEY_S] $[FLUVIOL_MOD_SUPER] GotoPage 1 0
+Bind $[FLUVIOL_KEY_D] $[FLUVIOL_MOD_SUPER] GotoPage 1 1
+Bind $[FLUVIOL_KEY_F] $[FLUVIOL_MOD_SUPER] GotoPage 1 2
+Bind $[FLUVIOL_KEY_X] $[FLUVIOL_MOD_SUPER] GotoPage 2 0
+Bind $[FLUVIOL_KEY_C] $[FLUVIOL_MOD_SUPER] GotoPage 2 1
+Bind $[FLUVIOL_KEY_V] $[FLUVIOL_MOD_SUPER] GotoPage 2 2
+
+# Assuming every desktop is a 3x3 matrix of pages, this allows movement of the
+# current window to another page via a similar "matrix" of key bindings:
+# ,-----------------------------------------------.
+# | <Super-Alt-q> | <Super-Alt-w> | <Super-Alt-e> |
+# -------------------------------------------------
+# | <Super-Alt-a> | <Super-Alt-s> | <Super-Alt-d> |
+# -------------------------------------------------
+# | <Super-Alt-z> | <Super-Alt-x> | <Super-Alt-c> |
+# '-----------------------------------------------'
+Bind $[FLUVIOL_KEY_W] $[FLUVIOL_MOD_SUPER]$[FLUVIOL_MOD_ALT] \
+    WarpWindowToPage 0 0
+Bind $[FLUVIOL_KEY_E] $[FLUVIOL_MOD_SUPER]$[FLUVIOL_MOD_ALT] \
+    WarpWindowToPage 0 1
+Bind $[FLUVIOL_KEY_R] $[FLUVIOL_MOD_SUPER]$[FLUVIOL_MOD_ALT] \
+    WarpWindowToPage 0 2
+Bind $[FLUVIOL_KEY_S] $[FLUVIOL_MOD_SUPER]$[FLUVIOL_MOD_ALT] \
+    WarpWindowToPage 1 0
+Bind $[FLUVIOL_KEY_D] $[FLUVIOL_MOD_SUPER]$[FLUVIOL_MOD_ALT] \
+    WarpWindowToPage 1 1
+Bind $[FLUVIOL_KEY_F] $[FLUVIOL_MOD_SUPER]$[FLUVIOL_MOD_ALT] \
+    WarpWindowToPage 1 2
+Bind $[FLUVIOL_KEY_X] $[FLUVIOL_MOD_SUPER]$[FLUVIOL_MOD_ALT] \
+    WarpWindowToPage 2 0
+Bind $[FLUVIOL_KEY_C] $[FLUVIOL_MOD_SUPER]$[FLUVIOL_MOD_ALT] \
+    WarpWindowToPage 2 1
+Bind $[FLUVIOL_KEY_V] $[FLUVIOL_MOD_SUPER]$[FLUVIOL_MOD_ALT] \
+    WarpWindowToPage 2 2
+
+# Bind <Super-F1> to identify the current window (e.g., the window name, icon
+# name, resource class, resource name, and so on for that window.)
+Bind F1 $[FLUVIOL_MOD_SUPER] \
+    IdentifyWindow
+
+# ....................{ WINDOW CYCLING                     }....................
+# Bind <Super-Tab> and <Super-Shift-Tab> to cycle forward and backward
+# through the list of most and least recently used windows on the current
+# desktop page, respectively. (This resembles that Windows-ish <Alt-Tab> list.)
+#
+# If running under FVWM-Crystal, print a well-decorated graphical window list;
+# otherwise, print no such list.
+DefineFunc BindWindowCycling
++ I Test (EnvIsSet FLUVIOL_IS_FVWM_CRYSTAL) KeepRc BindWindowCyclingToWindowList
++ I TestRc (NoMatch) BindWindowCyclingToWindowRaising
+
+# Bind <Super-Tab> and <Super-Shift-Tab> to show a well-decorated window list,
+# if running under FVWM-Crystal.
+DefineFunc BindWindowCyclingToWindowList
++ I Bind Tab $[FLUVIOL_MOD_SUPER] \
+    ShowWindowList
++ I Bind Tab $[FLUVIOL_MOD_SUPER]$[FLUVIOL_MOD_SHIFT] \
+    ShowWindowList
+
+# Bind <Super-Tab> and <Super-Shift-Tab> to simply cycle windows, if not
+# running under FVWM-Crystal.
+DefineFunc BindWindowCyclingToWindowRaising
++ I Bind Tab $[FLUVIOL_MOD_SUPER] \
+    Next ($[FLUVIOL_CIRCULATABLE_WINDOW]) RaiseWindowAndFocus
++ I Bind Tab $[FLUVIOL_MOD_SUPER]$[FLUVIOL_MOD_SHIFT] \
+    Prev ($[FLUVIOL_CIRCULATABLE_WINDOW]) RaiseWindowAndFocus
+
+# Bind <Super-Tab> and <Super-Shift-Tab> depending on whether we are running
+# under FVWM-Crystal or not.
+BindWindowCyclingToWindowRaising
+
+# ....................{ SCREENSHOTS                        }....................
+# Bind <PrintScr> to capture a screenshot of the entire screen.
+Bind $[FLUVIOL_KEY_PRINT] $[FLUVIOL_MOD_NONE] \
+    ScreenshotScreen
+
+# Bind <Ctrl-PrintScr> and <Alt-PrintScr> to capture a screenshot of the
+# selected window.
+Bind $[FLUVIOL_KEY_PRINT] $[FLUVIOL_MOD_CTRL] \
+    ScreenshotWindow
+Bind $[FLUVIOL_KEY_PRINT] $[FLUVIOL_MOD_ALT] \
+    ScreenshotWindow
+
+# Bind <Shift-PrintScr> to capture a screenshot of the selected region.
+Bind $[FLUVIOL_KEY_PRINT] $[FLUVIOL_MOD_SHIFT] \
+    ScreenshotRegion
+
+# ....................{ VOLUME CONTROL                     }....................
+# Bind <XF86AudioMute>, <XF86AudioLowerVolume>, and <XF86AudioRaiseVolume>
+# (that is, the audio-specific media keys on your keyboard) to mute, lower, and
+# raise the current volume.
+Bind XF86AudioMute        $[FLUVIOL_MOD_NONE] MuteVolume
+Bind XF86AudioLowerVolume $[FLUVIOL_MOD_NONE] LowerVolume
+Bind XF86AudioRaiseVolume $[FLUVIOL_MOD_NONE] RaiseVolume
+
+# --------------------( WASTELANDS                         )--------------------
+# Bind bindings, below, are (mostly) Dvorak-specific. If you don't use the Dvorak
+# key layout, you should (probably) change these bindings. Also, note that
+# "sUPer" refers to the Windows key (for Windows-preloaded laptops) or Apple key
+# (for OS X-preloaded laptops). Is there a Penguin key?

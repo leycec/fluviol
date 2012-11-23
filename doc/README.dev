@@ -1,0 +1,22 @@
+# ====================[ README.dev                         ]====================
+
+# --------------------( EMBEDDED SHELL SCRIPTS             )--------------------
+FVWM confines the contents of "Exec" scripts to approximately (somewhat
+arbitrarily) 1000 characters. "Exec" scripts exceeding this character limit
+are truncated to that limit without your consent, and without warning;
+arguably, this constitutes a subtle bug. When you see the following errors in
+your X.org log-file (typically "~/.xsession", but see below), it's likely that
+you've exceeded this character limit with one or more of your "Exec" scripts:
+
+    /bin/sh: -c: line 0: unexpected EOF while looking for matching `"'
+    /bin/sh: -c: line 1: syntax error: unexpected end of file
+
+Also, do not embed TAB-characters in your "Exec" scripts. Unpredictable
+mishaps will happen (likely owing to poor parsing of said TAB-characters by
+FVWM, the shell, or some combinatoric amalgam of the two).
+
+FVWM may or may not confine the contents of "PipeRead" scripts to a similar
+character limit. It does, however, impose implicit constraints on the
+content of those scripts: in particular, on use of "case" statements. When you
+see similar errors as those above, due to usage of "case", consider prefixing
+each match in that case with a '*'. In several cases, this corrects the issue.

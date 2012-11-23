@@ -1,0 +1,71 @@
+#!/bin/zsh
+# ====================[ zeshy                              ]====================
+#                     [ Time-stamp: "2009-04-18 19:29:36 leycec" ]
+#
+# --------------------( SYNOPSIS                           )--------------------
+# Zeshy. This top-level script sources all other Zeshy dependencies, and should
+# only itself be sourced by scripts requiring all such dependencies.
+#
+# --------------------( TODO                               )--------------------
+# * Add a genuine import() function replacing all existing usages of the
+#   source() function. The function should essentially mimic the latter, except
+#   that it additionally records the absolute filename being sourced in a Zsh
+#   dictionary and, when subsequent import() callers request the same file be
+#   imported silently avoids the importation. This simple (?) change provides a
+#   retinue of other changes, including permitting files such as "zeshy.prompt"
+#   to import its dependency, "zeshy.color", without oddities and
+#   inefficiencies.
+
+# ....................{ DEPENDENCIES                       }....................
+# Zeshy home directory, if not already set.
+if [[ -z "${ZESHY_HOME}" ]]; then
+    export ZESHY_HOME=$(readlink --canonicalize-existing $(dirname "${0}"))
+fi
+
+# Source "zeshy.core" prior to importing all other dependencies, however, as
+# that script defines the import() function called below.
+local zeshy_core_path="${ZESHY_HOME}/zeshy.core"
+echo "zeshy: loading \"${zeshy_core_path}\"..."
+source "${zeshy_core_path}"
+
+#FIXME: "exherbo" should definitely be moved elsewhere. "ssh" probably should
+#be. "git" is probably fine, but should be examined.... closely.
+# Source all shell scripts whose names start with "zeshy." in this directory,
+# as these scripts constitute the set of all dependencies for this script.
+# 
+# Importation order is not important, as all dependencies use the "import"
+# mechanism to specifically import their sub-dependencies as required.
+local script_name
+for   script_name in "${ZESHY_HOME}"/zeshy.*; do
+    import "${script_name}"
+done
+
+# ....................{ OPTIONS                            }....................
+# Permit input and output of meta characters (i.e., characters having the eighth
+# bit set). Do not do this in "zeshy.core" although that would be preferable, as
+# that appears to add these arguments to the current argument list "${@}".
+set meta-flag    on
+set input-meta   on
+set output-meta  on
+set convert-meta off
+
+# --------------------( COPYRIGHT AND LICENSE              )--------------------
+# The information below applies to everything in this distribution,
+# except where noted.
+#              
+# Copyleft 2010 by Cecil Curry.
+#   
+#   http://www.raiazome.com
+# 
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
