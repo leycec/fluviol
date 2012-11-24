@@ -1,0 +1,139 @@
+# -*- mode: fvwm -*-
+# ====================[ wallpaper                          ]====================
+#
+# --------------------( LICENSE                            )--------------------
+# Copyright 2007-2012 by Cecil Curry.
+# See "COPYING" for additional details.
+#
+# --------------------( SYNOPSIS                           )--------------------
+# Handle wallpaper rotation.
+
+# ....................{ WALLPAPER ROTATION                 }....................
+# Schedule wallpaper rotation.
+AddToFunc StartFunction
++ I ScheduleWallpaperRotation
+
+DefineFunc ScheduleWallpaperRotation
++ I Test (!EnvIsSet FLUVIOL_WALLPAPER_COMMAND) \
+    LogErrorAndBreak not scheduling wallpaper rotation, as no wallpaper programs found!
++ I Log scheduling wallpaper rotation...
++ I Deschedule $[FLUVIOL_WALLPAPER_SCHEDULE_ID]
++ I   Schedule Periodic \
+    $[FLUVIOL_WALLPAPER_SCHEDULE_MS] \
+    $[FLUVIOL_WALLPAPER_SCHEDULE_ID] RotateWallpapers
+
+# Rotate wallpapers on initial startup.
+AddToFunc InitFunction
++ I RotateWallpapers
+
+# Sets the wallpaper for the passed desktop page (where the first and second
+# arguments to this function are the X- and Y- coordinates of the page,
+# respectively), to the randomly selected image as previously cached by the
+# "RotateWallpaper" function. If necessary, this performs that rotation now.
+#
+# "Setting wallpaper," typically, means painting the external image for that
+# wallpaper onto the root window (beneath all other windows for the current
+# desktop page). This is a (somewhat) complex process. Neither FVWM or the
+# simple slew of Bourne shell-scripts, below, are able to "set wallpaper."
+# Instead, you must install an external application to do this for you.
+#
+# See "FLUVIOL_WALLPAPER_COMMAND," above, for details.
+DefineFunc SetWallpaperForCurrentPage
++ I Test (!EnvIsSet FLUVIOL_WALLPAPER_COMMAND) Return
++ I Test (!r "$[FLUVIOL_WALLPAPER_CACHE_HOME]/$[page.nx].$[page.ny]") RotateWallpapers
++ I Test (!r "$[FLUVIOL_WALLPAPER_CACHE_HOME]/$[page.nx].$[page.ny]") Break
++ I Exec exec $[FLUVIOL_WALLPAPER_COMMAND] $[FLUVIOL_WALLPAPER_ARGUMENTS] \
+             "$[FLUVIOL_WALLPAPER_CACHE_HOME]/$[page.nx].$[page.ny]"
+
+# Rotates wallpaper. This makes a new directory (under FVWM-Crystal, this is
+# "~/.fvwm-crystal/wallpapers/"), having symlinks to images to be used as
+# wallpaper for desktop pages. Specifically, this directory has one symlink
+# named "${PAGE_X}.${PAGE_Y}" for every desktop page, where ${PAGE_X} and
+# ${PAGE_Y} is the X- and Y-coordinates for the page. The upper-left-hand page,
+# for example, has X- and Y-coordinates (0, 0); and therefore has one symlink
+# named "0.0" in this directory, linking to the image to be used as wallpaper
+# for that page.
+#
+# This directory is the "target" directory. It caches our selection of which
+# wallpaper to use on which desktop page. The "SetWallpaper" function, above,
+# uses this cache to switch desktop page wallpaper when switching desktop pages.
+#
+# The target directory has symlinks to images residing under subdirectories of
+# the source directory. The source directory, in turn, has one subdirectory for
+# each desktop page. See "FLUVIOL_WALLPAPER_HOME," above, for a terse synopsis of
+# this substructure.
+#
+# We select subdirectories from the source directory in "ls" order,
+# alphabetically. This lets you explicitly control the assignment of
+# alphabetic subdirectories to desktop pages, by renaming those subdirectories
+# in accordance with "ls" order. In this way, a subdirectory named "0~nature/"
+# will probably have its images assigned to the first desktop page, "1~girls/"
+# will probably have its images assigned to the second desktop page, and so on.
+#
+# If the source directory has less subdirectories than you have defined
+# desktop pages, we reuse the last subdirectory in this directory for all
+# desktop pages for which there is no corresponding subdirectory.
+#
+# If the source directory has more subdirectories than you have defined
+# desktop pages, we ignore all "later" subdirectories for which there is no
+# corresponding desktop page.
+#
+# If the source directory has no subdirectories at all, we fail with error.
+#
+# This function is written in Bourne shell-script and a wee dabbling of `awk`,
+# so as to run cross-portably and (more decisively) without requiring your
+# installation of external scripts, scripting languages, or other crass
+# dependencies. Wallpaper rotation is a brute, simple process; and, being simply
+# implementable in Bourne shell, shouldn't ever require heavier scripting or
+# implementation lifting.
+#
+# This function randomly selects one source wallpaper file from each source
+# wallpaper subdirectory by: feeding awk a newline-separated list of source
+# wallpaper files for each source wallpaper subdirectory, seeding awk's
+# psuedorandom number generator with an unsigned 4-byte integer, selecting a
+# psuedorandom number between [1, NF] where "NF" is the number of source
+# wallpaper files for the source wallpaper subdirectory, and returning the
+# psuedorandom number-eth source wallpaper file. We manually seed awk's
+# psuedorandom number generator, as awk's default seed (some function of the
+# current date) often generates non-psuedorandom numbers.
+#
+# This function, admittedly, may be subtly error-prone--as Bourne shell-scripts
+# are wont to be. That said, I have stably run it for some months. Your mileage
+# may vary. (But I hope it treats you well.)
+DefineFunc RotateWallpapers
+#FIXME: Abstract into a new CallIfNotDir() function.
++ I Test (!r "$[FLUVIOL_WALLPAPER_HOME]") \
+    LogErrorAndBreak wallpapers not found at $[FLUVIOL_WALLPAPER_HOME]!
++ I Log rotating wallpapers...
++ I PipeRead '\
+if [ ! -d "$[FLUVIOL_WALLPAPER_CACHE_HOME]" ]; then \
+  echo "Log making $[FLUVIOL_WALLPAPER_CACHE_HOME]..."; \
+  mkdir -p "$[FLUVIOL_WALLPAPER_CACHE_HOME]"; \
+fi'
++ I Exec \
+PAGE_X_MAX=$(expr $[desk.pagesx] - 1); \
+PAGE_Y_MAX=$(expr $[desk.pagesy] - 1); \
+PAGE_CUR=0; \
+\
+for PAGE_X in $(seq 0 $PAGE_X_MAX); do \
+for PAGE_Y in $(seq 0 $PAGE_Y_MAX); do \
+  PAGE_CUR=$(expr $PAGE_CUR + 1); \
+  SEED=$(date +'%N'); \
+\
+  WALLPAPER_TARGET_FILE="$[FLUVIOL_WALLPAPER_CACHE_HOME]/${PAGE_X}.${PAGE_Y}"; \
+  FLUVIOL_WALLPAPER_HOME=$(ls -1dF "$[FLUVIOL_WALLPAPER_HOME]"/* | \
+  awk -v CF=$PAGE_CUR '\
+    BEGIN { RS = ""; FS = "\n" } \
+    END { if (CF > NF) CF = NF; print $CF }'); \
+  WALLPAPER_SOURCE_FILE="$FLUVIOL_WALLPAPER_HOME"$(ls -1 "$FLUVIOL_WALLPAPER_HOME" | \
+  awk -v SEED="$SEED" '\
+    BEGIN { RS = ""; FS = "\n"; srand(SEED) } \
+    END { RF = int(rand()*NF + 1); print $RF }'); \
+\
+  rm "$WALLPAPER_TARGET_FILE"; \
+  ln -s "$WALLPAPER_SOURCE_FILE" "$WALLPAPER_TARGET_FILE"; \
+done; \
+done
++ I Log rotating wallpapers... done.
+
+# --------------------( WASTELANDS                         )--------------------

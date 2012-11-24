@@ -1,0 +1,45 @@
+# -*- mode: fvwm -*-
+# ====================[ ui                                 ]====================
+#
+# --------------------( LICENSE                            )--------------------
+# Copyright 2007-2012 by Cecil Curry.
+# See "COPYING" for additional details.
+#
+# --------------------( SYNOPSIS                           )--------------------
+# Manage the FVWM user interface (e.g., colorsets).
+
+# ....................{ GLOBALS                            }....................
+# Index of the next Colorset to be defined. By "man fvwm", the first Colorset
+# index should generally be 0 to conserve memory.
+SetEnv FLUVIOL_COLORSET_INDEX_NEXT 0
+
+# ....................{ DEFINERS                           }....................
+#FIXME: This is horrible. We should define a function for defining new
+#colorsets, which internally uses a cached global to determine what the next
+#available "index" for the new colorset should be. Shouldn't be terribly hard.
+#Naturally, we'd need to integrate that with FVWM-Crystal... *sigh*
+#FIXME: Shift to an earlier, more general component. Perhaps "color" or "ui"?
+# void DefineColorset(
+#   string variable_name,
+#   string colorset_arg1, string colorset_arg2, ...)
+#
+# Set the passed variable to the index of a newly defined Colorset with the
+# passed arguments.
+DefineFunc DefineColorset
+# Set the passed variable to the next Colorset index.
++ I SetEnv $0 $[FLUVIOL_COLORSET_INDEX_NEXT]
+# Define such colorset.
++ I Colorset $[FLUVIOL_COLORSET_INDEX_NEXT] $[1-]
+#FIXME: Be great to add simple math operators: e.g., IncrementEnvBy(),
+#DecrementEnvBy(), MultiplyEnvBy(), DivideEnvBy(), and so on. Then add analogues
+#to "++" and "--": IncrementEnv() and DecrementEnv().
+# Increment such index.
++ I PipeRead 'echo SetEnv FLUVIOL_COLORSET_INDEX_NEXT\
+    $(( FLUVIOL_COLORSET_INDEX_NEXT + 1 ))'
+
+# ....................{ REVERSE DEPENDENCIES               }....................
+Import $./menu
+
+# --------------------( WASTELANDS                         )--------------------
+#AddToFunc StartFunction
+# Reinitialize global $[FLUVIOL_COLORSET_INDEX_NEXT] on each FVWM [re]start.

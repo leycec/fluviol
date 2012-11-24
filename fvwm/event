@@ -1,0 +1,117 @@
+# -*- mode: fvwm -*-
+# ====================[ fvwmevent                          ]====================
+#
+# --------------------( LICENSE                            )--------------------
+# Copyright 2007-2012 by Cecil Curry.
+# See "COPYING" for additional details.
+#
+# --------------------( SYNOPSIS                           )--------------------
+# Handle window manager events (e.g., desktop switch, window closure).
+#
+# --------------------( TODO                               )--------------------
+# * I finally realized why closing application dialogs switches to the current
+#   desktop's fluake rather than the application itself. As these things go,
+#   it's appallingly simple once you actually consider it: when in an
+#   application, the most recently focused application was probably that fluake;
+#   when in a dialog, the most recently focused application appears to *STILL*
+#   be that fluake when (obviously) it should be that application. The only
+#   logical reason why this would be is that opening and focusing a dialog does
+#   not appear to trigger a change to the variable recording "the most recently
+#   focused application" in our current implementation. We should really track
+#   this down. It's annoying as heck.
+
+# ....................{ FVWMEVENT                          }....................
+# Remove all existing event handlers before defining new event handlers.
+DestroyModuleConfig FvwmEventFluviol: *
+
+# Define such handlers.
+*FvwmEventFluviol: new_page       AfterChangingToNewPage
+*FvwmEventFluviol: add_window     AfterCreatingWindow
+*FvwmEventFluviol: destroy_window AfterDestroyingWindow
+*FvwmEventFluviol: focus_change   AfterChangingWindowFocus
+*FvwmEventFluviol: leave_window   AfterLeavingWindow
+
+# Uncommenting the following line usefully logs all FVWM events for debugging.
+#*FvwmEventFluviol: Cmd Echo
+
+# Enable such handlers.
+LoadModule FvwmEvent FvwmEventFluviol
+
+# ....................{ FVWMEVENT ~ page                   }....................
+# void AfterChangingToNewPage(void)
+#
+# When changing pages, automatically raise the last focused window on the new
+# page and set the wallpaper to that page's wallpaper.
+DefineFunc AfterChangingToNewPage
+# Always restore the current focused window, first. This minimizes (though,
+# cannot entirely prevent) obscure race conditions.
++ I RaiseLastFocusedWindowForCurrentPage
+# Set the wallpaper for this page prior to performing any other page-specific
+# setting. Setting wallpaper is a time-consuming operation, and should be
+# completed (and thus began) as quickly as possible. This gives a "smooth"
+# transition into the page.
++ I SetWallpaperForCurrentPage
+
+# ....................{ FVWMEVENT ~ window                 }....................
+# When focusing windows, automatically shade all non-focused, shadeable
+# windows, automatically focus (and defocus) all groupable windows as a group,
+# and remember the newly focused window is the most recently focused window for
+# the current page and desktop.
+DefineFunc AfterChangingWindowFocus
+#FIXME: Actually, I believe we can define a function IsThisWindowOverlappable()
+#return true only on such conditions, yes? We'd need to prefix "Break" with
+#"KeepRc" to prevent pollution of the return code, but this should work. How
+#about:
+#
+#DefineFunc IsThisWindowOverlappable
+#+ I ThisWindow ($[FLUVIOL_OVERLAPPABLE_WINDOW]) ReturnMatch
+#+ I ThisWindow (Transient) ReturnMatch
+#+ I ReturnError # ideally, ReturnNoMatch -- but unsure how to implement that
+#
+#Then here, write:
+#
+#+ I IsThisWindowOverlappable
+#+ I TestRc (Match) Break
+#
+#O.K.; so, that'd work. But how about *THIS*:
+#
+#+ I ReturnIfMatch IsThisWindowOverlappable
+#
+#DefineFunc ReturnIfMatch
+#+ I $*
+#+ I TestRc (Match) Return
+#
+#Should work, no? Pretty concisely readable, I must admit.
+# By definition, transient windows are overlappable. Since FVWM provides no OR
+# condition operator, separate the two tests. (Yes, this is terrible.)
++ I ThisWindow ($[FLUVIOL_OVERLAPPABLE_WINDOW]) Break
++ I ThisWindow (Transient) Break
+# Always store the currently focused window, first. This minimizes (though,
+# cannot entirely prevent) obscure race conditions.
++ I StoreLastFocusedWindowForCurrentPage
++ I ShadeAllShadyUnfocusedWindows
++ I ChangeWindowFocusAsAGroup "Gimp*"
+
+# After creating a new window, automatically raise that window.
+DefineFunc AfterCreatingWindow
+# By definition, transient windows are overlappable. See above.
++ I ThisWindow ($[FLUVIOL_OVERLAPPABLE_WINDOW]) Break
++ I ThisWindow (Transient) Break
++ I ThisWindow ($[FLUVIOL_MAXIMAL_WINDOW]) Maximize True 100 100
++ I ThisWindow RaiseWindowAndFocus
+
+# After closing a focused window, automatically raise the last focused window
+# for the current page.
+DefineFunc AfterDestroyingWindow
++ I RaiseLastFocusedWindowForCurrentPage
+
+# After leaving a temporary window with the mouse, automatically destroy that
+# window.
+DefineFunc AfterLeavingWindow
++ I ThisWindow ($[FLUVIOL_TEMPORARY_WINDOW]) Close
+
+# --------------------( WASTELANDS                         )--------------------
+#*FvwmEventFluvio: windowshade AfterShadingWindow
+#*FvwmEventFluvio: dewindowshade AfterUnshadingWindow
+# *FvwmEventFluvio: raise_window AfterRaisingWindow
+# *FvwmEventFluvio: lower_window AfterLoweringWindow

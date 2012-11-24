@@ -1,0 +1,16 @@
+# -*- mode: fvwm -*-
+# ====================[ main                               ]====================
+#
+# --------------------( LICENSE                            )--------------------
+# Copyright 2007-2012 by Cecil Curry.
+# See "COPYING" for additional details.
+#
+# --------------------( SYNOPSIS                           )--------------------
+# Manage external commands.
+
+# ....................{ REVERSE DEPENDENCIES               }....................
+Import $./daemon
+
+# --------------------( WASTELANDS                         )--------------------
+# Such command need not be a genuine
+# "daemon" but may refer to a forkable command of any sort.#

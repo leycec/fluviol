@@ -1,0 +1,54 @@
+# -*- mode: fvwm -*-
+# ====================[ main                               ]====================
+#
+# --------------------( LICENSE                            )--------------------
+# Copyright 2007-2012 by Cecil Curry.
+# See "COPYING" for additional details.
+#
+# --------------------( SYNOPSIS                           )--------------------
+# Manage desktop pages.
+
+# ....................{ DESKTOP PAGES                      }....................
+# Make each desktop a 3x3 matrix of pages (of 9 total pages), like so:
+#
+# ,-----------------------------------------------.
+# | page 1: (0,0) | page 2: (0,1) | page 3: (0,2) |
+# -------------------------------------------------
+# | page 4: (1,0) | page 5: (1,1) | page 6: (1,2) |
+# -------------------------------------------------
+# | page 7: (2,0) | page 8: (2,1) | page 9: (2,2) |
+# `-----------------------------------------------'
+DesktopSize 3x3
+
+# On initial startup, automatically navigate to the "middle" desktop page. As
+# FVWMEvent, above, sets wallpaper on page navigation, this also has the
+# indirect (but desired) effect of setting wallpaper. (We delay this page
+# navigation half a second after startup - as FVWM behaves poorly to page
+# navigation attempts just after startup. Let's shrug that one away, eh?)
+AddToFunc InitFunction
++ I Schedule 500 GotoPage 1 1
+
+DefineFunc WarpWindowToPage
++ I Current MoveToPage $*
+
+# Make 4 "pan frames" (invisible windows situated at the 4 cardinal edges of
+# each desktop viewport) of 1 pixel-width, each. Pan frames must be at least
+# 1 pixel-width for any of the edge options, below, to be considered.
+EdgeThickness 0
+
+# Do not change the desktop viewport when moving the mouse to an edge.
+EdgeScroll 0 0
+
+# Do not change the desktop viewport when moving the mouse to an edge of the
+# current desktop viewport; but do permit movement and resizement of windows
+# through desktop viewports when those windows are moved at least EdgeResistance
+# number of pixels past an edge of the current desktop viewport.
+Style * EdgeMoveDelay 0
+#FIXME: What's the proper command for this?
+#Style * EdgeResistance 64
+#Style *  MwmFunctions, OLDecor, GNOMEIgnoreHints
+
+# ....................{ REVERSE DEPENDENCIES               }....................
+Import $./wallpaper
+
+# --------------------( WASTELANDS                         )--------------------

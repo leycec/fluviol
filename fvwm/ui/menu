@@ -7,18 +7,46 @@
 #
 # --------------------( SYNOPSIS                           )--------------------
 # Handle FVWM menus.
+#
+# --------------------( SEE ALSO                           )--------------------
+# http://www.fvwm.org/documentation/faq/#toc_3.23
+#   Official FAQ entry on transparent menus.
+# http://zensites.net/fvwm/guide/menu.html
+#   Unofficial, but flagrantly helpful, guide to menus.
+
+#FIXME: Menu border currently a hideous grey. How to correct?
+#FIXME: Menu text a bit too small. How to reasonably increase in size? Also, I'm
+#not necessarily convinced the default font is the best. We *REALLY* want to
+#default to the current user's preferred sans serif font under XFT. We
+#currently affect something similar for FvwmIdent windows with:
+#
+#    *FvwmIdent: Font "xft:snap"
+#
+#Ah! Interesting. We probably don't want to define fonts on a per-window basis
+#at all, really. (No profit in it.) Instead, just set the following global:
+#"DefaultFont". Brilliant!
 
 # ....................{ DEFINERS                           }....................
-#FIXME: Add simple menu translucency as well; see great discussion at:
-#    http://zensites.net/fvwm/guide/menu.html
-#That said, "man fvwm" lists no "Translucent" option. Google us a new solution.
-
 # void DefineMenu(string menuName, string menuDescription, string menuCode)
 #
 # Define the passed function with the passed implementation.
 DefineFunc DefineMenu
 + I DestroyMenu $0
 + I   AddToMenu $*
+
+# ....................{ COLORSETS                          }....................
+# Define a transparent colorset to be subsequently applied to menus. Option
+# "RootTransparent" is considerably more efficient and aesthetic than option
+# "Transparent" but requires a sufficiently capable wallpaper-setting utility
+# (e.g., "fvwm-root -r", "Esetroot", "wmsetbg").
+DefineColorset FLUVIOL_COLORSET_MENU\
+    RootTransparent buffer,\
+    fg rgb:44/ee/dd,\
+    bg Average,\
+    Tint rgb:00/22/33 80
+
+# Apply the prior colorset to all menus.
+MenuStyle * MenuColorset $[FLUVIOL_COLORSET_MENU]
 
 # ....................{ MENUS                              }....................
 
@@ -42,5 +70,11 @@ DefineMenu SetScreenResolution 'Screen Resolution'
 + '&2 640x480'   SetScreenResolution 640x480
 
 # --------------------( WASTELANDS                         )--------------------
+#   Tint rgb:00/77/77 77
+#   fg rgb:77/ff/ee,\
+#   bgTint rgb:33/cc/99 77
+#   bgTint black 77
+#     Tint black 77,\
+
 #DestroyMenu MenuSetScreenResolution
 #AddToMenu   MenuSetScreenResolution 'Screen Resolution'

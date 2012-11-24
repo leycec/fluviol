@@ -1,0 +1,42 @@
+# -*- mode: fvwm -*-
+# ====================[ identify                           ]====================
+#
+# --------------------( LICENSE                            )--------------------
+# Copyright 2007-2012 by Cecil Curry.
+# See "COPYING" for additional details.
+#
+# --------------------( SYNOPSIS                           )--------------------
+# Handle window identification with module FvwmIdent.
+
+# ....................{ IDENTIFIERS                        }....................
+# void IdentifyWindow(integer windowID)
+#
+# Identify the passed window with an FvwmIdent window describing the former.
+DefineFunc IdentifyWindow
++ I All   (FvwmIdent) Close
++ I Module FvwmIdent
+
+# ....................{ FVWMIDENT ~ style                  }....................
+DestroyStyle FvwmIdent
+
+# Prevent identification windows from siezing the focus.
+Style FvwmIdent NeverFocus
+
+# Prevent identification windows from sticking across pages.
+Style FvwmIdent !StickyAcrossPages
+
+# Prevent identification windows from being moved or resized.
+Style FvwmIdent FixedPosition, FixedSize
+
+# Prevent identification windows from appearing on window lists.
+Style FvwmIdent CirculateSkip, WindowListSkip
+
+# ....................{ FVWMIDENT ~ config                 }....................
+DestroyModuleConfig FvwmIdent: *
+
+# Aesthetically style FvwmIdent windows.
+*FvwmIdent: Back #191970
+*FvwmIdent: Fore #ffffff
+*FvwmIdent: Font "xft:snap"
+
+# --------------------( WASTELANDS                         )--------------------

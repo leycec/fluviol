@@ -1,0 +1,54 @@
+# -*- mode: fvwm -*-
+# ====================[ daemon                             ]====================
+#
+# --------------------( LICENSE                            )--------------------
+# Copyright 2007-2012 by Cecil Curry.
+# See "COPYING" for additional details.
+#
+# --------------------( SYNOPSIS                           )--------------------
+# Handle daemonized external commands.
+
+# ....................{ DAEMONIZERS                        }....................
+#FIXME: Rename to DaemonizeCommand().
+# void Daemonize(
+#   string commandName, string commandArg1, string commandArg2, ...)
+#
+# Daemonize the passed command by forking a new process running such command if
+# no process runs such command currently.
+DefineFunc Daemonize
++ I IfNotAlreadyRunningCommand ForkCommand $[*]
+
+#FIXME: Rename to DaemonizeCommandAndBlockUntilRunning().
+# void DaemonizeAndWait(
+#   string commandName, string commandArg1, string commandArg2, ...)
+#
+# Daemonize the passed command and block until such process has begun running.
+DefineFunc DaemonizeAndWait
++ I IfNotAlreadyRunningCommand ForkCommandAndWait $[*]
+
+# ....................{ STARTUP                            }....................
+# Daemonize several commands on initial FVWM startup (but not FVWM restarts).
+AddToFunc InitFunction
+#FIXME: We want an FVWM function setting this.
+# Dynamically adjust display properties with the XRandR X.org extension.
++ I Test (EnvIsSet FLUVIOL_XRANDR_DPI)\
+    Daemonize xrandr --dpi $[FLUVIOL_XRANDR_DPI]
+#FIXME: Is the autocutsel daemon the source of the upper-left icon; and, if so,
+#       can it not be hidden away via an event handler?
+# Synchronize the cutbuffer (the mouse-driven cut-paste buffer, in which text
+# is copied into the buffer with mouse selection and pasted from the buffer
+# with mouse middle-click) with the clipboard (the keyboard-driven cut-paste
+# buffer, in which text is copied into the buffer with Ctrl-c, cut with Ctrl-x,
+# and pasted with Ctrl-v). Synchronizing these buffers is (generally) a good
+# thing. See: http://www.nongnu.org/autocutsel
++ I Daemonize autocutsel -selection CLIPBOARD -fork
+# Hide the mouse pointer after 1 second of mouse inactivity with all windows,
+# including the "root window" (i.e., the desktop).
++ I Daemonize unclutter -idle 1
+# Daemonize LinEAK, an XOSD-enabled application for binding keyboard media keys
+# to actual commands.
+# + I Daemonize lineakd
+
+# --------------------( WASTELANDS                         )--------------------
+# Such command need not be a genuine
+# "daemon" but may refer to a forkable command of any sort.#

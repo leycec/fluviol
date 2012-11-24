@@ -11,16 +11,6 @@
 # extensibility (e.g., wallpaper rotation, Kuake consoles).
 #
 # --------------------( TODO                               )--------------------
-# * I finally realized why closing application dialogs switches to the current
-#   desktop's fluake rather than the application itself. As these things go,
-#   it's appallingly simple once you actually consider it: when in an
-#   application, the most recently focused application was probably that fluake;
-#   when in a dialog, the most recently focused application appears to *STILL*
-#   be that fluake when (obviously) it should be that application. The only
-#   logical reason why this would be is that opening and focusing a dialog does
-#   not appear to trigger a change to the variable recording "the most recently
-#   focused application" in our current implementation. We should really track
-#   this down. It's annoying as heck.
 # * H0LY MOTHER OF THE GODDESS! I'm using a roughly three year-old snapshot
 #   of Zeshy here! Just check "fvwm/global". Jeebus. I mean... what? How did
 #   this never come up? This needs to default to "$[ZESHY_HOME]" immediately.
@@ -124,6 +114,11 @@ Log loading "$[FLUVIOL_RC_FILE]"...
 #functions, so just implement the equivalent import logic manually here.
 
 # ....................{ FUNCTIONS ~ flow                   }....................
+# FVWM restrictions limit the usefulness of flow control functionality. As
+# "man fvwm" admits, "Important note: return codes are... not inherited by sub
+# functions." Hence, return codes flow *UP* the function call hierarchy but
+# never *DOWN*.
+
 # void Return(void)
 #
 # Return from the calling function without changing the current return code.
@@ -159,6 +154,30 @@ DefineFunc SetReturnCodeToMatch
 # Set the current return code to "Error" (i.e., -1), signifying fatal error.
 DefineFunc SetReturnCodeToError
 + I PipeRead false
+
+#FIXME: Hmm; this function probably doesn't work at all, due to the above
+#important note. (This has been confirmed. Doesn't work.) Excise everywhere,
+#replacing with manual... *WAIT*. We *CAN* do something like this, but we'll
+#have to do it manually by passing a new first argument to this function:
+#$[cond.rc]. While FVWM doesn't implicitly pass such return code to called
+#functions, there's no reason we can't manually do so ourselves. I believe we
+#could then do something resembling:
+#
+#DefineFunc OrDie
+#+ I SetEnv cond.rc $0
+#+ I TestRc (Match) Return
+#+ I KeepRc LogErrorAndBreak $[1-]
+#
+#This assumes, of course, that FVWM lets us overwrite $[cond.rc] manually. It
+#should, but... well, it *IS* a special variable. Easy to test, anyway. If this
+#works, we should be able to extend the metaphor to other flow control
+#functions. If the above doesn't work, also try:
+#
+#+ I SetEnv [cond.rc] $0
+#
+#I'm unclear whether or not the "[" and "]" are part of the variable name or
+#constitute genuine FVWM syntax. Ah, the latter, actually; "[" and "]" are
+#requisite FVWM syntax for all variable names of more than one character.
 
 # void OrDie(string ErrorMessage)
 #
@@ -284,21 +303,6 @@ fi'
 #FIXME: Print graphical errors in addition to logging error messages on startup
 #error.
 
-# void Daemonize(string ExternalCommand, ...)
-#
-# Daemonize the passed external command. That is, fork a new process executing
-# that command if (and only if) there is no existing process already executing
-# that command. Strictly speaking, the command need not refer to a genuine
-# "daemon" but may refer to a forkable command of any sort.
-DefineFunc Daemonize
-+ I IfNotAlreadyRunningCommand ForkCommand $[*]
-
-# void DaemonizeAndWait(string ExternalCommand, ...)
-#
-# Daemonize the passed external command and wait until a process running.
-DefineFunc DaemonizeAndWait
-+ I IfNotAlreadyRunningCommand ForkCommandAndWait $[*]
-
 #FIXME: Can't the check be reduced to:
 #   'pidof "$[1]" 1>/dev/null 2>&1 or echo $[*]'
 #Also, what's up with the odd function name?
@@ -379,20 +383,10 @@ DefineFunc Import
 DefineFunc ImportFluviol
 + I Import "$[FLUVIOL_FVWM_DIR]/$[0]"
 
-# ....................{ DEPENDENCIES                       }....................
-#FIXME: Be nice to add support for importing multiple scripts at a time. Looping
-#feasible in pure Zsh? Oh, right; PipeRead() it, if I recall correctly.
-#FIXME: Interesting. The following command fails:
-#    Import $./global/global
-#Clearly, "$." does not refer to what we wanted it to. (Perhaps due to
-#symlinking?) Try logging "$." to see where we currently are. *shrug*
-ImportFluviol global/global
-ImportFluviol input/key
-ImportFluviol input/mouse
-ImportFluviol menu
-ImportFluviol screen
+# ....................{ LIFECYCLE                          }....................
+# Define lifecycle functions prior to importing Fluviol components, most of
+# which attempt to append functionality to such functions.
 
-# ....................{ STARTUP                            }....................
 # Run on FVWM [re]start, before running "InitFunction" and "RestartFunction".
 DefineFunc StartFunction
 + I Nop
@@ -415,154 +409,28 @@ DefineFunc ExitFunction
 DefineFunc ShutdownFunction
 + I Log shutting down...
 
-# ....................{ DAEMONS                            }....................
-# Daemonize several commands on initial FVWM startup (but not FVWM restarts).
-AddToFunc InitFunction
-#FIXME: We want an FVWM function setting this.
-# Dynamically adjust display properties with the XRandR X.org extension.
-+ I Test (EnvIsSet FLUVIOL_XRANDR_DPI) Daemonize xrandr --dpi $[FLUVIOL_XRANDR_DPI]
-#FIXME: Is the autocutsel daemon the source of the upper-left icon; and, if so,
-#       can it not be hidden away via an event handler?
-# Synchronize the cutbuffer (the mouse-driven cut-paste buffer, in which text
-# is copied into the buffer with mouse selection and pasted from the buffer
-# with mouse middle-click) with the clipboard (the keyboard-driven cut-paste
-# buffer, in which text is copied into the buffer with Ctrl-c, cut with Ctrl-x,
-# and pasted with Ctrl-v). Synchronizing these buffers is (generally) a good
-# thing. See: http://www.nongnu.org/autocutsel
-+ I Daemonize autocutsel -selection CLIPBOARD -fork
-# Hide the mouse pointer after 1 second of mouse inactivity with all windows,
-# including the "root window" (i.e., the desktop).
-+ I Daemonize unclutter -idle 1
-# Daemonize LinEAK, an XOSD-enabled application for binding keyboard media keys
-# to actual commands.
-# + I Daemonize lineakd
+# ....................{ DEPENDENCIES                       }....................
+#FIXME: Be nice to add support for importing multiple scripts at a time. Looping
+#feasible in pure Zsh? Oh, right; PipeRead() it, if I recall correctly.
+#FIXME: Interesting. The following command fails:
+#    Import $./global/global
+#Clearly, "$." does not refer to what we wanted it to. (Perhaps due to
+#symlinking?) Try logging "$." to see where we currently are. *shrug*
 
-# ....................{ EVENT HANDLING                     }....................
-#FIXME: This *REALLY* deserves its own component -- say, "fvwm/event".
-DestroyModuleConfig FvwmEventFluviol: *
+# For code sanity, import Fluviol components defining global variables prior to
+# all other Fluviol components.
+ImportFluviol global/main
 
-# Uncommenting the following line usefully logs FVWM events for later debugging.
-#*FvwmEventFluviol: Cmd Echo
+# Import all other Fluviol components. Order is (hopefully) not important.
+ImportFluviol command/main
+ImportFluviol input/main
+ImportFluviol page/main
+ImportFluviol ui/main
+ImportFluviol window/main
+ImportFluviol x/main
 
-*FvwmEventFluviol: add_window     AfterCreatingWindow
-*FvwmEventFluviol: destroy_window AfterDestroyingWindow
-*FvwmEventFluviol: focus_change   AfterChangingWindowFocus
-*FvwmEventFluviol: leave_window   AfterLeavingWindow
-*FvwmEventFluviol: new_page       AfterChangingToNewPage
-#*FvwmEventFluvio: windowshade AfterShadingWindow
-#*FvwmEventFluvio: dewindowshade AfterUnshadingWindow
-# *FvwmEventFluvio: raise_window AfterRaisingWindow
-# *FvwmEventFluvio: lower_window AfterLoweringWindow
-
-LoadModule FvwmEvent FvwmEventFluviol
-
-# When changing pages, automatically raise the last focused window on the new
-# page and set the wallpaper to that page's wallpaper.
-DefineFunc AfterChangingToNewPage
-# Always restore the current focused window, first. This minimizes (though,
-# cannot entirely prevent) obscure race conditions.
-+ I RaiseLastFocusedWindowForCurrentPage
-# Set the wallpaper for this page prior to performing any other page-specific
-# setting. Setting wallpaper is a time-consuming operation, and should be
-# completed (and thus began) as quickly as possible. This gives a "smooth"
-# transition into the page.
-+ I SetWallpaperForCurrentPage
-
-# When focusing windows, automatically shade all non-focused, shadeable
-# windows, automatically focus (and defocus) all groupable windows as a group,
-# and remember the newly focused window is the most recently focused window for
-# the current page and desktop.
-DefineFunc AfterChangingWindowFocus
-#FIXME: Actually, I believe we can define a function IsThisWindowOverlappable()
-#return true only on such conditions, yes? We'd need to prefix "Break" with
-#"KeepRc" to prevent pollution of the return code, but this should work. How
-#about:
-#
-#DefineFunc IsThisWindowOverlappable
-#+ I ThisWindow ($[FLUVIOL_OVERLAPPABLE_WINDOW]) ReturnMatch
-#+ I ThisWindow (Transient) ReturnMatch
-#+ I ReturnError # ideally, ReturnNoMatch -- but unsure how to implement that
-#
-#Then here, write:
-#
-#+ I IsThisWindowOverlappable
-#+ I TestRc (Match) Break
-#
-#O.K.; so, that'd work. But how about *THIS*:
-#
-#+ I ReturnIfMatch IsThisWindowOverlappable
-#
-#DefineFunc ReturnIfMatch
-#+ I $*
-#+ I TestRc (Match) Return
-#
-#Should work, no? Pretty concisely readable, I must admit.
-# By definition, transient windows are overlappable. Since FVWM provides no OR
-# condition operator, separate the two tests. (Yes, this is terrible.)
-+ I ThisWindow ($[FLUVIOL_OVERLAPPABLE_WINDOW]) Break
-+ I ThisWindow (Transient) Break
-# Always store the currently focused window, first. This minimizes (though,
-# cannot entirely prevent) obscure race conditions.
-+ I StoreLastFocusedWindowForCurrentPage
-+ I ShadeAllShadyUnfocusedWindows
-+ I ChangeWindowFocusAsAGroup "Gimp*"
-
-# After creating a new window, automatically raise that window.
-DefineFunc AfterCreatingWindow
-# By definition, transient windows are overlappable. See above.
-+ I ThisWindow ($[FLUVIOL_OVERLAPPABLE_WINDOW]) Break
-+ I ThisWindow (Transient) Break
-+ I ThisWindow ($[FLUVIOL_MAXIMAL_WINDOW]) Maximize True 100 100
-+ I ThisWindow RaiseWindowAndFocus
-
-# After closing a focused window, automatically raise the last focused window
-# for the current page.
-DefineFunc AfterDestroyingWindow
-+ I RaiseLastFocusedWindowForCurrentPage
-
-# After leaving a temporary window with the mouse, automatically destroy that
-# window.
-DefineFunc AfterLeavingWindow
-+ I ThisWindow ($[FLUVIOL_TEMPORARY_WINDOW]) Close
-
-# ....................{ DESKTOP PAGES                      }....................
-# Make each desktop a 3x3 matrix of pages (of 9 total pages), like so:
-# ,-----------------------------------------------.
-# | page 1: (0,0) | page 2: (0,1) | page 3: (0,2) |
-# -------------------------------------------------
-# | page 4: (1,0) | page 5: (1,1) | page 6: (1,2) |
-# -------------------------------------------------
-# | page 7: (2,0) | page 8: (2,1) | page 9: (2,2) |
-# '-----------------------------------------------'
-DesktopSize 3x3
-
-# On initial startup, automatically navigate to the "middle" desktop page. As
-# FVWMEvent, above, sets wallpaper on page navigation, this also has the
-# indirect (but desired) effect of setting wallpaper. (We delay this page
-# navigation half a second after startup - as FVWM behaves poorly to page
-# navigation attempts just after startup. Let's shrug that one away, eh?)
-AddToFunc InitFunction
-+ I Schedule 500 GotoPage 1 1
-
-DefineFunc WarpWindowToPage
-+ I Current MoveToPage $*
-
-# Make 4 "pan frames" (invisible windows situated at the 4 cardinal edges of
-# each desktop viewport) of 1 pixel-width, each. Pan frames must be at least
-# 1 pixel-width for any of the edge options, below, to be considered.
-EdgeThickness 0
-
-# Do not change the desktop viewport when moving the mouse to an edge.
-EdgeScroll 0 0
-
-# Do not change the desktop viewport when moving the mouse to an edge of the
-# current desktop viewport; but do permit movement and resizement of windows
-# through desktop viewports when those windows are moved at least EdgeResistance
-# number of pixels past an edge of the current desktop viewport.
-Style * EdgeMoveDelay 0
-#FIXME: What's the proper command for this?
-#Style * EdgeResistance 64
-#Style *  MwmFunctions, OLDecor, GNOMEIgnoreHints
+#FIXME: Split into two files: "window/event" and "page/event". Only makes sense!
+ImportFluviol event
 
 # ....................{ WINDOW PLACEMENT                   }....................
 # Place windows by avoiding overlapping. (Grep "Window Manager placement" in
@@ -693,13 +561,15 @@ DefineFunc RaiseWindowToHeadOfWindowList
 # This can be used to ensure, in particular, that GiMP windows focus and defocus
 # as a uniform group.
 DefineFunc ChangeWindowFocusAsAGroup
-+ I ThisWindow ($[0]) All ($[FLUVIOL_FOCUSABLE_WINDOW], $[0], !Raised) RaiseWindow
++ I ThisWindow ($[0]) All ($[FLUVIOL_FOCUSABLE_WINDOW], $[0], !Raised)\
+    RaiseWindow
 
 # When restarting FVWM, FVWM occasionally fails to restore window focus to the
 # most recently focused window prior to the reset. We restore the focus, now, to
 # some eligible window on the current desktop page.
 AddToFunc RestartFunction
-+ I None (Focused) Next ($[FLUVIOL_FOCUSABLE_WINDOW], !Shaded) RaiseWindowAndFocus
++ I None (Focused) Next ($[FLUVIOL_FOCUSABLE_WINDOW], !Shaded)\
+    RaiseWindowAndFocus
 
 # ....................{ WINDOW SHADING                     }....................
 # Shade and lower the current window.
@@ -716,7 +586,8 @@ DefineFunc ShadeWindowAndRaisePreviousWindow
 # Shade all "shady," unfocused windows. (Typically, this is called when changing
 # window focus away from the folque or a fluake, to shade that window.)
 DefineFunc ShadeAllShadyUnfocusedWindows
-+ I All ($[FLUVIOL_FOCUSABLE_WINDOW], $[FLUVIOL_SHADY_WINDOW], !Focused !Shaded) ShadeWindow
++ I All ($[FLUVIOL_FOCUSABLE_WINDOW], $[FLUVIOL_SHADY_WINDOW], !Focused, !Shaded)\
+    ShadeWindow
 
 # Raise and unshade the current window, if it's shaded; or lower and shade it,
 # otherwise.
@@ -753,30 +624,6 @@ Style * ResizeOpaque
 # override the FVWM resize hint for Emacs frames.)
 Style * ResizeHintOverride
 
-# ....................{ WINDOW INDENTIFICATION             }....................
-DefineFunc IdentifyWindow
-+ I All   (FvwmIdent) Close
-+ I Module FvwmIdent
-
-DestroyStyle FvwmIdent
-
-# Prevent identification windows from siezing the focus.
-Style FvwmIdent NeverFocus
-
-# Prevent identification windows from sticking across pages.
-Style FvwmIdent !StickyAcrossPages
-
-# Prevent identification windows from being moved or resized.
-Style FvwmIdent FixedPosition, FixedSize
-
-# Prevent identification windows from appearing on window lists.
-Style FvwmIdent CirculateSkip, WindowListSkip
-
-DestroyModuleConfig FvwmIdent: *
-*FvwmIdent: Back #191970
-*FvwmIdent: Fore #ffffff
-*FvwmIdent: Font "xft:snap"
-
 # ....................{ WINDOW STYLES                      }....................
 # Hide the window frame and titlebar for all windows. (This requires that you
 # move, resize, and otherwise manipulate windows with key bindings.)
@@ -786,7 +633,8 @@ Style * !Title, !Handles, BorderWidth 0, HandleWidth 0
 # that window's exact name and $[WINDOW_INDEX] an integer between 1 and N,
 # where N is the number of windows with that same exact name. (This helps us
 # discern between multiple instances of that same window.)
-Style * IndexedWindowName, IndexedIconName
+Style * TitleFormat %n (%t)
+Style * IconTitleFormat %n (%t)
 
 # Window-shade windows instantaneously, without graduated animation. (This is
 # arguably more efficient, but arguably less aesthetic.)
@@ -1035,134 +883,8 @@ Style Folque WindowListSkip, CirculateSkip
 # Allow Folque to move or resize itself.
 Style Folque VariablePosition, VariableSize
 
-# ....................{ WALLPAPER ROTATION                 }....................
-# Schedule wallpaper rotation.
-AddToFunc StartFunction
-+ I ScheduleWallpaperRotation
-
-DefineFunc ScheduleWallpaperRotation
-+ I Test (!EnvIsSet FLUVIOL_WALLPAPER_COMMAND) \
-    LogErrorAndBreak not scheduling wallpaper rotation, as no wallpaper programs found!
-+ I Log scheduling wallpaper rotation...
-+ I Deschedule $[FLUVIOL_WALLPAPER_SCHEDULE_ID]
-+ I   Schedule Periodic \
-    $[FLUVIOL_WALLPAPER_SCHEDULE_MS] \
-    $[FLUVIOL_WALLPAPER_SCHEDULE_ID] RotateWallpapers
-
-# Rotate wallpapers on initial startup.
-AddToFunc InitFunction
-+ I RotateWallpapers
-
-# Sets the wallpaper for the passed desktop page (where the first and second
-# arguments to this function are the X- and Y- coordinates of the page,
-# respectively), to the randomly selected image as previously cached by the
-# "RotateWallpaper" function. If necessary, this performs that rotation now.
-#
-# "Setting wallpaper," typically, means painting the external image for that
-# wallpaper onto the root window (beneath all other windows for the current
-# desktop page). This is a (somewhat) complex process. Neither FVWM or the
-# simple slew of Bourne shell-scripts, below, are able to "set wallpaper."
-# Instead, you must install an external application to do this for you.
-#
-# See "FLUVIOL_WALLPAPER_COMMAND," above, for details.
-DefineFunc SetWallpaperForCurrentPage
-+ I Test (!EnvIsSet FLUVIOL_WALLPAPER_COMMAND) Return
-+ I Test (!r "$[FLUVIOL_WALLPAPER_CACHE_HOME]/$[page.nx].$[page.ny]") RotateWallpapers
-+ I Test (!r "$[FLUVIOL_WALLPAPER_CACHE_HOME]/$[page.nx].$[page.ny]") Break
-+ I Exec exec $[FLUVIOL_WALLPAPER_COMMAND] $[FLUVIOL_WALLPAPER_ARGUMENTS] \
-             "$[FLUVIOL_WALLPAPER_CACHE_HOME]/$[page.nx].$[page.ny]"
-
-# Rotates wallpaper. This makes a new directory (under FVWM-Crystal, this is
-# "~/.fvwm-crystal/wallpapers/"), having symlinks to images to be used as
-# wallpaper for desktop pages. Specifically, this directory has one symlink
-# named "${PAGE_X}.${PAGE_Y}" for every desktop page, where ${PAGE_X} and
-# ${PAGE_Y} is the X- and Y-coordinates for the page. The upper-left-hand page,
-# for example, has X- and Y-coordinates (0, 0); and therefore has one symlink
-# named "0.0" in this directory, linking to the image to be used as wallpaper
-# for that page.
-#
-# This directory is the "target" directory. It caches our selection of which
-# wallpaper to use on which desktop page. The "SetWallpaper" function, above,
-# uses this cache to switch desktop page wallpaper when switching desktop pages.
-#
-# The target directory has symlinks to images residing under subdirectories of
-# the source directory. The source directory, in turn, has one subdirectory for
-# each desktop page. See "FLUVIOL_WALLPAPER_HOME," above, for a terse synopsis of
-# this substructure.
-#
-# We select subdirectories from the source directory in "ls" order,
-# alphabetically. This lets you explicitly control the assignment of
-# alphabetic subdirectories to desktop pages, by renaming those subdirectories
-# in accordance with "ls" order. In this way, a subdirectory named "0~nature/"
-# will probably have its images assigned to the first desktop page, "1~girls/"
-# will probably have its images assigned to the second desktop page, and so on.
-#
-# If the source directory has less subdirectories than you have defined
-# desktop pages, we reuse the last subdirectory in this directory for all
-# desktop pages for which there is no corresponding subdirectory.
-#
-# If the source directory has more subdirectories than you have defined
-# desktop pages, we ignore all "later" subdirectories for which there is no
-# corresponding desktop page.
-#
-# If the source directory has no subdirectories at all, we fail with error.
-#
-# This function is written in Bourne shell-script and a wee dabbling of `awk`,
-# so as to run cross-portably and (more decisively) without requiring your
-# installation of external scripts, scripting languages, or other crass
-# dependencies. Wallpaper rotation is a brute, simple process; and, being simply
-# implementable in Bourne shell, shouldn't ever require heavier scripting or
-# implementation lifting.
-#
-# This function randomly selects one source wallpaper file from each source
-# wallpaper subdirectory by: feeding awk a newline-separated list of source
-# wallpaper files for each source wallpaper subdirectory, seeding awk's
-# psuedorandom number generator with an unsigned 4-byte integer, selecting a
-# psuedorandom number between [1, NF] where "NF" is the number of source
-# wallpaper files for the source wallpaper subdirectory, and returning the
-# psuedorandom number-eth source wallpaper file. We manually seed awk's
-# psuedorandom number generator, as awk's default seed (some function of the
-# current date) often generates non-psuedorandom numbers.
-#
-# This function, admittedly, may be subtly error-prone--as Bourne shell-scripts
-# are wont to be. That said, I have stably run it for some months. Your mileage
-# may vary. (But I hope it treats you well.)
-DefineFunc RotateWallpapers
-+ I Test (!r "$[FLUVIOL_WALLPAPER_HOME]") \
-    LogErrorAndBreak wallpapers not found at $[FLUVIOL_WALLPAPER_HOME]!
-+ I Log rotating wallpapers...
-+ I PipeRead '\
-if [ ! -d "$[FLUVIOL_WALLPAPER_CACHE_HOME]" ]; then \
-  echo "Log making $[FLUVIOL_WALLPAPER_CACHE_HOME]..."; \
-  mkdir -p "$[FLUVIOL_WALLPAPER_CACHE_HOME]"; \
-fi'
-+ I Exec \
-PAGE_X_MAX=$(expr $[desk.pagesx] - 1); \
-PAGE_Y_MAX=$(expr $[desk.pagesy] - 1); \
-PAGE_CUR=0; \
-\
-for PAGE_X in $(seq 0 $PAGE_X_MAX); do \
-for PAGE_Y in $(seq 0 $PAGE_Y_MAX); do \
-  PAGE_CUR=$(expr $PAGE_CUR + 1); \
-  SEED=$(date +'%N'); \
-\
-  WALLPAPER_TARGET_FILE="$[FLUVIOL_WALLPAPER_CACHE_HOME]/${PAGE_X}.${PAGE_Y}"; \
-  FLUVIOL_WALLPAPER_HOME=$(ls -1dF "$[FLUVIOL_WALLPAPER_HOME]"/* | \
-  awk -v CF=$PAGE_CUR '\
-    BEGIN { RS = ""; FS = "\n" } \
-    END { if (CF > NF) CF = NF; print $CF }'); \
-  WALLPAPER_SOURCE_FILE="$FLUVIOL_WALLPAPER_HOME"$(ls -1 "$FLUVIOL_WALLPAPER_HOME" | \
-  awk -v SEED="$SEED" '\
-    BEGIN { RS = ""; FS = "\n"; srand(SEED) } \
-    END { RF = int(rand()*NF + 1); print $RF }'); \
-\
-  rm "$WALLPAPER_TARGET_FILE"; \
-  ln -s "$WALLPAPER_SOURCE_FILE" "$WALLPAPER_TARGET_FILE"; \
-done; \
-done
-+ I Log rotating wallpapers... done.
-
 # --------------------( WASTELANDS                         )--------------------
+#IndexedWindowName, IndexedIconName
 # * It's time. Github this already. We're risking catastrophic failure with our
 #   laziness -- and that's just not cool, bro.
 # Import user-configured key bindings. Do so after resolving whether we are
