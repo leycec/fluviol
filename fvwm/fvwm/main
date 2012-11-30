@@ -1,0 +1,65 @@
+# -*- mode: fvwm -*-
+# ====================[ main                               ]====================
+#
+# --------------------( LICENSE                            )--------------------
+# Copyright 2007-2012 by Cecil Curry.
+# See "COPYING" for additional details.
+#
+# --------------------( SYNOPSIS                           )--------------------
+# Manage the core FVWM user interface (UI).
+#
+# --------------------( TODO                               )--------------------
+# * I finally realized why closing application dialogs switches to the current
+#   desktop's fluake rather than the application itself. As these things go,
+#   it's appallingly simple once you actually consider it: when in an
+#   application, the most recently focused application was probably that fluake;
+#   when in a dialog, the most recently focused application appears to *STILL*
+#   be that fluake when (obviously) it should be that application. The only
+#   logical reason why this would be is that opening and focusing a dialog does
+#   not appear to trigger a change to the variable recording "the most recently
+#   focused application" in our current implementation. We should really track
+#   this down. It's annoying as heck.
+
+# ....................{ DEFINERS                           }....................
+# Index of the next Colorset to be defined. By "man fvwm", the first Colorset
+# index should generally be 0 to conserve memory.
+SetEnv FLUVIOL_COLORSET_INDEX_NEXT 0
+
+#FIXME: Integrate with FVWM-Crystal... *sigh*
+# void DefineColorset(
+#   string variable_name,
+#   string colorset_arg1, string colorset_arg2, ...)
+#
+# Set the passed variable to the index of a newly defined Colorset with the
+# passed arguments.
+DefineFunc DefineColorset
+# Set the passed variable to the next Colorset index.
++ I SetEnv $0 $[FLUVIOL_COLORSET_INDEX_NEXT]
+# Define such colorset.
++ I Colorset $[FLUVIOL_COLORSET_INDEX_NEXT] $[1-]
+#FIXME: Be great to add simple math operators: e.g., IncrementVariableBy(),
+#DecrementVariableBy(), MultiplyVariableBy(), DivideVariableBy(), and so on.
+#Then add analogues to "++" and "--" calling such functions: e.g.,
+#IncrementVariable() and DecrementVariable().
+# Increment such index.
++ I PipeRead 'echo SetEnv FLUVIOL_COLORSET_INDEX_NEXT\
+    $(( FLUVIOL_COLORSET_INDEX_NEXT + 1 ))'
+
+# ....................{ DEPENDENTS ~ fvwm-crystal          }....................
+# FVWM-Crystal sets the "SelectOnReleaseKey" environment variable; FVWM does
+# not. As such, testing for presence of this environment variable constitutes a
+# sufficient test for whether we are running under FVWM-Crystal. (Joy-joy!)
+Test (EnvIsSet SelectOnReleaseKey) SetEnv FLUVIOL_IS_FVWM_CRYSTAL "yes"
+
+# If running under FVWM-Crystal, import FVWM-Crystal-specific functionality. Do
+# so prior to any other startup initialization, since such initialization
+# overwrites stock FVWM-Crystal settings with Fluviol settings.
+AddToFunc StartFunction
++ I Test (EnvIsSet FLUVIOL_IS_FVWM_CRYSTAL) ImportFluviol $./crystal
+
+# ....................{ DEPENDENTS                         }....................
+# Import all other dependents after importing FVWM-Crystal functionality, above.
+Import $./event
+Import $./font
+
+# --------------------( WASTELANDS                         )--------------------

@@ -80,18 +80,6 @@ Import $./config
 # keymap actually inputs the "e" character instead.
 Test (EnvIsSet FLUVIOL_KEYMAP) SetKeyNames$[FLUVIOL_KEYMAP]
 
-# ....................{ FVWM-CRYSTAL                       }....................
-# FVWM-Crystal sets the "SelectOnReleaseKey" environment variable; FVWM does
-# not. As such, testing for presence of this environment variable constitutes a
-# sufficient test for whether we are running under FVWM-Crystal. (Joy-joy!)
-Test (EnvIsSet SelectOnReleaseKey) SetEnv FLUVIOL_IS_FVWM_CRYSTAL "yes"
-
-# If running under FVWM-Crystal, import FVWM-Crystal-specific functionality. Do
-# so prior to any other startup initialization, since such initialization
-# overwrites stock FVWM-Crystal settings with Fluviol settings.
-AddToFunc StartFunction
-+ I Test (EnvIsSet FLUVIOL_IS_FVWM_CRYSTAL) ImportFluviol crystal
-
 # ....................{ DEPENDENCIES ~ keys                }....................
 # void Bind(char *KeyName, char *KeyModifiers, char *FunctionName)
 #

@@ -1,0 +1,20 @@
+# -*- mode: fvwm -*-
+# ====================[ font                               ]====================
+#
+# --------------------( LICENSE                            )--------------------
+# Copyright 2007-2012 by Cecil Curry.
+# See "COPYING" for additional details.
+#
+# --------------------( SYNOPSIS                           )--------------------
+# Handle core FVWM fonts.
+
+# ....................{ DEFAULTS                           }....................
+#FIXME: Nice, but the font size should ideally be in proportion to current DPI.
+#Any idea how to generalize?
+DefaultFont "xft:sans-serif:pixelsize=16"
+#DefaultFont "xft:serif:pixelsize=16"
+#DefaultFont "xft:monospace:pixelsize=16"
+
+# --------------------( WASTELANDS                         )--------------------
+# (This function is run once
+# and only once; thus, it makes a respectable pad for launching daemons.)

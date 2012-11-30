@@ -1,12 +1,12 @@
 # -*- mode: fvwm -*-
-# ====================[ menu                               ]====================
+# ====================[ main                               ]====================
 #
 # --------------------( LICENSE                            )--------------------
 # Copyright 2007-2012 by Cecil Curry.
 # See "COPYING" for additional details.
 #
 # --------------------( SYNOPSIS                           )--------------------
-# Handle FVWM menus.
+# Manage FVWM menus.
 #
 # --------------------( SEE ALSO                           )--------------------
 # http://www.fvwm.org/documentation/faq/#toc_3.23
@@ -41,9 +41,9 @@ DefineFunc DefineMenu
 # (e.g., "fvwm-root -r", "Esetroot", "wmsetbg").
 DefineColorset FLUVIOL_COLORSET_MENU\
     RootTransparent buffer,\
-    fg rgb:44/ee/dd,\
+    fg rgb:33/dd/cc,\
     bg Average,\
-    Tint rgb:00/22/33 80
+    Tint rgb:00/11/22 80
 
 # Apply the prior colorset to all menus.
 MenuStyle * MenuColorset $[FLUVIOL_COLORSET_MENU]
@@ -70,6 +70,8 @@ DefineMenu SetScreenResolution 'Screen Resolution'
 + '&2 640x480'   SetScreenResolution 640x480
 
 # --------------------( WASTELANDS                         )--------------------
+#   fg rgb:44/ee/dd,\
+#   Tint rgb:00/22/33 80
 #   Tint rgb:00/77/77 77
 #   fg rgb:77/ff/ee,\
 #   bgTint rgb:33/cc/99 77

@@ -179,7 +179,8 @@ DefineFunc SetReturnCodeToError
 #constitute genuine FVWM syntax. Ah, the latter, actually; "[" and "]" are
 #requisite FVWM syntax for all variable names of more than one character.
 
-# void OrDie(string ErrorMessage)
+#FIXME: Rename to DieUnless() and make above changes.
+# void OrDie(integer priorFunctionCondRc, string errorMessage)
 #
 # If the current return code (as returned by the prior FVWM command) indicates
 # "NoMatch", "Error", or "Break", log the passed error message to the FVWM
@@ -364,7 +365,9 @@ DefineFunc Import
 + I Read $[0] quiet
 #FIXME: This isn't actually working. Easy to test: just pass a random path. It
 #superficially appears to work, since "... failed!" never appears, but doesn't
-#actually work, of course. Hmm.
+#actually work, of course. Hmm. Ah; right. See above! We probably want to
+#replace with something like:
+#+ I DieUnless $[cond.rc] loading "$[0]"... failed!
 + I OrDie loading "$[0]"... failed!
 #+ I OrDie cannot import "$[0]"!
 
@@ -383,32 +386,6 @@ DefineFunc Import
 DefineFunc ImportFluviol
 + I Import "$[FLUVIOL_FVWM_DIR]/$[0]"
 
-# ....................{ LIFECYCLE                          }....................
-# Define lifecycle functions prior to importing Fluviol components, most of
-# which attempt to append functionality to such functions.
-
-# Run on FVWM [re]start, before running "InitFunction" and "RestartFunction".
-DefineFunc StartFunction
-+ I Nop
-#+ I Log loading "$[FLUVIOL_RC_FILE]"...
-
-# Run on FVWM restart, after running "StartFunction".
-DefineFunc RestartFunction
-+ I Log reloading "$[FLUVIOL_RC_FILE]"...
-
-# Run on FVWM startup, after running "StartFunction". (This function is run once
-# and only once; thus, it makes a respectable pad for launching daemons.)
-DefineFunc InitFunction
-+ I Log initializing "$[FLUVIOL_RC_FILE]"...
-
-# Run on FVWM shutdown (and restart, before running "StartFunction").
-DefineFunc ExitFunction
-+ I Test (Quit) ShutdownFunction
-
-# Run on FVWM shutdown (but not restart).
-DefineFunc ShutdownFunction
-+ I Log shutting down...
-
 # ....................{ DEPENDENCIES                       }....................
 #FIXME: Be nice to add support for importing multiple scripts at a time. Looping
 #feasible in pure Zsh? Oh, right; PipeRead() it, if I recall correctly.
@@ -417,20 +394,18 @@ DefineFunc ShutdownFunction
 #Clearly, "$." does not refer to what we wanted it to. (Perhaps due to
 #symlinking?) Try logging "$." to see where we currently are. *shrug*
 
-# For code sanity, import Fluviol components defining global variables prior to
-# all other Fluviol components.
+# Define core FVWM functionality and global variables prior to importing all
+# other Fluviol components. Order is important.
+ImportFluviol fvwm/main
 ImportFluviol global/main
 
 # Import all other Fluviol components. Order is (hopefully) not important.
 ImportFluviol command/main
 ImportFluviol input/main
+ImportFluviol menu/main
 ImportFluviol page/main
-ImportFluviol ui/main
 ImportFluviol window/main
 ImportFluviol x/main
-
-#FIXME: Split into two files: "window/event" and "page/event". Only makes sense!
-ImportFluviol event
 
 # ....................{ WINDOW PLACEMENT                   }....................
 # Place windows by avoiding overlapping. (Grep "Window Manager placement" in

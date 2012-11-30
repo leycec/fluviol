@@ -8,6 +8,64 @@
 # --------------------( SYNOPSIS                           )--------------------
 # Manage desktop windows.
 
+# ....................{ EVENTS                             }....................
+# When focusing windows, automatically shade all non-focused, shadeable
+# windows, automatically focus (and defocus) all groupable windows as a group,
+# and remember the newly focused window is the most recently focused window for
+# the current page and desktop.
+DefineFunc AfterChangingWindowFocus
+#FIXME: Actually, I believe we can define a function IsThisWindowOverlappable()
+#return true only on such conditions, yes? We'd need to prefix "Break" with
+#"KeepRc" to prevent pollution of the return code, but this should work. How
+#about:
+#
+#DefineFunc IsThisWindowOverlappable
+#+ I ThisWindow ($[FLUVIOL_OVERLAPPABLE_WINDOW]) ReturnMatch
+#+ I ThisWindow (Transient) ReturnMatch
+#+ I ReturnError # ideally, ReturnNoMatch -- but unsure how to implement that
+#
+#Then here, write:
+#
+#+ I IsThisWindowOverlappable
+#+ I TestRc (Match) Break
+#
+#O.K.; so, that'd work. But how about *THIS*:
+#
+#+ I ReturnIfMatch IsThisWindowOverlappable
+#
+#DefineFunc ReturnIfMatch
+#+ I $*
+#+ I TestRc (Match) Return
+#
+#Should work, no? Pretty concisely readable, I must admit.
+# By definition, transient windows are overlappable. Since FVWM provides no OR
+# condition operator, separate the two tests. (Yes, this is terrible.)
++ I ThisWindow ($[FLUVIOL_OVERLAPPABLE_WINDOW]) Break
++ I ThisWindow (Transient) Break
+# Always store the currently focused window, first. This minimizes (though,
+# cannot entirely prevent) obscure race conditions.
++ I StoreLastFocusedWindowForCurrentPage
++ I ShadeAllShadyUnfocusedWindows
++ I ChangeWindowFocusAsAGroup "Gimp*"
+
+# After creating a new window, automatically raise that window.
+DefineFunc AfterCreatingWindow
+# By definition, transient windows are overlappable. See above.
++ I ThisWindow ($[FLUVIOL_OVERLAPPABLE_WINDOW]) Break
++ I ThisWindow (Transient) Break
++ I ThisWindow ($[FLUVIOL_MAXIMAL_WINDOW]) Maximize True 100 100
++ I ThisWindow RaiseWindowAndFocus
+
+# After leaving a temporary window with the mouse, automatically destroy that
+# window.
+DefineFunc AfterLeavingWindow
++ I ThisWindow ($[FLUVIOL_TEMPORARY_WINDOW]) Close
+
+# After closing a focused window, automatically raise the last focused window
+# for the current page.
+DefineFunc AfterDestroyingWindow
++ I RaiseLastFocusedWindowForCurrentPage
+
 # ....................{ REVERSE DEPENDENCIES               }....................
 Import $./identify
 

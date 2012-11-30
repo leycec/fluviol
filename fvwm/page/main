@@ -8,8 +8,9 @@
 # --------------------( SYNOPSIS                           )--------------------
 # Manage desktop pages.
 
-# ....................{ DESKTOP PAGES                      }....................
-# Make each desktop a 3x3 matrix of pages (of 9 total pages), like so:
+# ....................{ PROPERTIES                         }....................
+# Partition each physical desktop into 9 virtual pages, arranged into a 3x3
+# square "matrix" like so:
 #
 # ,-----------------------------------------------.
 # | page 1: (0,0) | page 2: (0,1) | page 3: (0,2) |
@@ -19,17 +20,6 @@
 # | page 7: (2,0) | page 8: (2,1) | page 9: (2,2) |
 # `-----------------------------------------------'
 DesktopSize 3x3
-
-# On initial startup, automatically navigate to the "middle" desktop page. As
-# FVWMEvent, above, sets wallpaper on page navigation, this also has the
-# indirect (but desired) effect of setting wallpaper. (We delay this page
-# navigation half a second after startup - as FVWM behaves poorly to page
-# navigation attempts just after startup. Let's shrug that one away, eh?)
-AddToFunc InitFunction
-+ I Schedule 500 GotoPage 1 1
-
-DefineFunc WarpWindowToPage
-+ I Current MoveToPage $*
 
 # Make 4 "pan frames" (invisible windows situated at the 4 cardinal edges of
 # each desktop viewport) of 1 pixel-width, each. Pan frames must be at least
@@ -44,9 +34,44 @@ EdgeScroll 0 0
 # through desktop viewports when those windows are moved at least EdgeResistance
 # number of pixels past an edge of the current desktop viewport.
 Style * EdgeMoveDelay 0
+
 #FIXME: What's the proper command for this?
 #Style * EdgeResistance 64
 #Style *  MwmFunctions, OLDecor, GNOMEIgnoreHints
+
+# ....................{ STARTUP                            }....................
+# On initial startup, automatically navigate to the "middle" desktop page. Since
+# AfterChangingToNewPage() sets wallpaper on page navigation, this also has the
+# indirect (but desirable) effect of setting wallpaper. Since FVWM responds
+# poorly to page navigation attempts immediately after startup, delay such
+# navigation for half a second after startup. (Let's shrug that one away, eh?)
+AddToFunc InitFunction
++ I Schedule 500 GotoPage 1 1
+
+# ....................{ EVENTS                             }....................
+# void AfterChangingToNewPage(void)
+#
+# When changing pages, automatically raise the last focused window on the new
+# page and set the wallpaper to that page's wallpaper.
+DefineFunc AfterChangingToNewPage
+# Always restore the current focused window, first. This minimizes (though,
+# cannot entirely prevent) obscure race conditions.
++ I RaiseLastFocusedWindowForCurrentPage
+# Set the wallpaper for this page prior to performing any other page-specific
+# setting. Setting wallpaper is a time-consuming operation, and should be
+# completed (and thus began) as quickly as possible. This gives a "smooth"
+# transition into the page.
++ I SetWallpaperForCurrentPage
+
+# ....................{ WINDOWS                            }....................
+#FIXME: Why "Warp" instead of "Move"? Rename.
+# void WarpWindowToPage(integer page_x, integer page_y)
+#
+# Move the currently focused window to the desktop page with the passed 0-based
+# Cartesian coordinates such that (0, 0) identifies the upper-left page and
+# (2, 2) the lower-right page.
+DefineFunc WarpWindowToPage
++ I Current MoveToPage $*
 
 # ....................{ REVERSE DEPENDENCIES               }....................
 Import $./wallpaper

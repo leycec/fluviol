@@ -9,9 +9,9 @@
 # Handle window identification with module FvwmIdent.
 
 # ....................{ IDENTIFIERS                        }....................
-# void IdentifyWindow(integer windowID)
+# void IdentifyWindow(void)
 #
-# Identify the passed window with an FvwmIdent window describing the former.
+# Describe the current window with a temporary FvwmIdent window.
 DefineFunc IdentifyWindow
 + I All   (FvwmIdent) Close
 + I Module FvwmIdent
@@ -32,11 +32,23 @@ Style FvwmIdent FixedPosition, FixedSize
 Style FvwmIdent CirculateSkip, WindowListSkip
 
 # ....................{ FVWMIDENT ~ config                 }....................
+#FIXME: Could use a helper function abstracting out such operations; after
+#doing so, remove this and the above DestroyStyle(): e.g.,
+#
+#void ResetModule(string moduleName)
+#
+#Reset all configuration settings for the passed module back to their defaults.
+#If such module produces windows of the same name, class, or resource (e.g.,
+#module "FvwmIdent" produces windows of same name "FvwmIdent"), also remove all
+#styles from such windows.
+#DefineFunc ResetModule
+#+ I DestroyStyle $0
+#+ I DestroyModuleConfig $0: *
 DestroyModuleConfig FvwmIdent: *
 
 # Aesthetically style FvwmIdent windows.
-*FvwmIdent: Back #191970
+*FvwmIdent: Back #111177
 *FvwmIdent: Fore #ffffff
-*FvwmIdent: Font "xft:snap"
 
 # --------------------( WASTELANDS                         )--------------------
+#*FvwmIdent: Font "xft:snap"

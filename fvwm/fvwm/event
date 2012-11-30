@@ -1,0 +1,107 @@
+# -*- mode: fvwm -*-
+# ====================[ main                               ]====================
+#
+# --------------------( LICENSE                            )--------------------
+# Copyright 2007-2012 by Cecil Curry.
+# See "COPYING" for additional details.
+#
+# --------------------( SYNOPSIS                           )--------------------
+# Handle core FVWM events.
+#
+# --------------------( TODO                               )--------------------
+# * I finally realized why closing application dialogs switches to the current
+#   desktop's fluake rather than the application itself. As these things go,
+#   it's appallingly simple once you actually consider it: when in an
+#   application, the most recently focused application was probably that fluake;
+#   when in a dialog, the most recently focused application appears to *STILL*
+#   be that fluake when (obviously) it should be that application. The only
+#   logical reason why this would be is that opening and focusing a dialog does
+#   not appear to trigger a change to the variable recording "the most recently
+#   focused application" in our current implementation. We should really track
+#   this down. It's annoying as heck.
+
+# ....................{ DEFINERS                           }....................
+# void OnFVWMStartup(string function1, string function2, ...)
+#
+# Call the passed functions on FVWM (re)start before calling functions passed to
+# OnFVWMStartupFirst() and OnFVWMStartupAgain().
+DefineFunc OnFVWMStartup
++ I AddToFunc StartupFunction $*
+
+# void OnFVWMStartupFirst(string function1, string function2, ...)
+#
+# Call the passed functions on initial FVWM startup (but no subsequent restart)
+# after calling functions passed to OnFVWMStartup().
+DefineFunc OnFVWMStartupFirst
++ I AddToFunc InitFunction $*
+
+# void OnFVWMStartupAgain(string function1, string function2, ...)
+#
+# Call the passed functions on subsequent FVWM restart (but not initial startup)
+# after calling functions passed to OnFVWMStartup().
+DefineFunc OnFVWMStartupAgain
++ I AddToFunc RestartFunction $*
+
+# void OnFVWMShutdown(string function1, string function2, ...)
+#
+# Call the passed functions on both final FVWM shutdown and subsequent FVWM
+# restart before calling functions passed to OnFVWMStartFirst() and
+# OnFVWMStartAgain().
+DefineFunc OnFVWMShutdown
++ I AddToFunc ExitFunction $*
+
+# void OnFVWMShutdownLast(string function1, string function2, ...)
+#
+# Call the passed functions on final FVWM shutdown (but not subsequent restart).
+DefineFunc OnFVWMShutdownLast
++ I AddToFunc ShutdownFunction $*
+
+# ....................{ STARTUP                            }....................
+# Define FVWM startup and shutdown functions prior to importing components, most
+# of which attempt to append functionality to such functions.
+
+# Called on FVWM (re)start before calling InitFunction() and RestartFunction().
+DefineFunc StartFunction
++ I Log starting up...
+#+ I Nop
+#+ I Log loading "$[FLUVIOL_RC_FILE]"...
+
+# Called on FVWM restart after calling StartFunction().
+DefineFunc RestartFunction
++ I Log restarting...
+#+ I Log reloading "$[FLUVIOL_RC_FILE]"...
+
+# Called on FVWM startup after calling StartFunction().
+DefineFunc InitFunction
++ I Log initializing...
+#+ I Log initializing "$[FLUVIOL_RC_FILE]"...
+
+# Run on FVWM shutdown (and restart before calling StartFunction()).
+DefineFunc ExitFunction
++ I Test   (Quit) ShutdownFunction
++ I TestRc (NoMatch) Log preparing to restart...
+
+# Run on FVWM shutdown (but not restart).
+DefineFunc ShutdownFunction
++ I Log shutting down...
+
+# ....................{ MODULES ~ FvwmEvent                }....................
+# Remove all existing event handlers before defining new event handlers.
+DestroyModuleConfig FvwmEventFluviol: *
+
+# Define such handlers.
+*FvwmEventFluviol: new_page       AfterChangingToNewPage
+*FvwmEventFluviol: add_window     AfterCreatingWindow
+*FvwmEventFluviol: destroy_window AfterDestroyingWindow
+*FvwmEventFluviol: focus_change   AfterChangingWindowFocus
+*FvwmEventFluviol: leave_window   AfterLeavingWindow
+
+# Uncommenting the following line usefully logs all FVWM events for debugging.
+#*FvwmEventFluviol: Cmd Echo
+
+# Enable such handlers.
+LoadModule FvwmEvent FvwmEventFluviol
+
+# --------------------( WASTELANDS                         )--------------------
+# (This function is run once
+# and only once; thus, it makes a respectable pad for launching daemons.)
