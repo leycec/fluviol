@@ -26,6 +26,131 @@
 #at all, really. (No profit in it.) Instead, just set the following global:
 #"DefaultFont". Brilliant!
 
+# ....................{ GLOBALS                            }....................
+# Define a transparent colorset to be subsequently applied to menus. Option
+# "RootTransparent" is considerably more efficient and aesthetic than option
+# "Transparent" but requires a sufficiently capable wallpaper-setting utility
+# (e.g., "fvwm-root -r", "Esetroot", "wmsetbg").
+DefineColorset FLUVIOL_COLORSET_MENU_DEFAULT\
+    RootTransparent buffer,\
+    Foreground rgb:33/dd/cc,\
+    Background Average,\
+    Tint rgb:00/11/22 88,\
+    Hilight rgb:66/44/44,\
+    Shadow  rgb:66/55/66
+#   Shadow  rgb:55/44/55
+#   Shadow  rgb:33/55/66
+#   Shadow  rgb:77/55/55
+#   Shadow  rgb:44/22/22
+
+# Define menu title colors. Inherit the background from the default menu
+# colorset rather than defining a background; sadly, FVWM seems unable to change
+# "RootTransparent" tinting for selected menu items.
+DefineColorset FLUVIOL_COLORSET_MENU_TITLE\
+    RootTransparent buffer,\
+    Foreground rgb:00/aa/99
+#   Foreground rgb:00/99/aa
+#   Foreground rgb:22/aa/dd
+
+# Define selected menu item colors. Inherit the background from the default menu
+# colorset rather than defining a background; sadly, FVWM seems unable to change
+# "RootTransparent" tinting for selected menu items without shifting such
+# background in an aesthetically jarring manner.
+DefineColorset FLUVIOL_COLORSET_MENU_ITEM_SELECTED\
+    RootTransparent buffer,\
+    Foreground rgb:dd/bb/bb
+#   Foreground rgb:99/99/ee,\
+#   Foreground rgb:55/ff/ee,\
+#   Foreground rgb:00/aa/99,\
+#   fg rgb:55/ff/ee
+#   bg Average,\
+#   Tint rgb:33/44/55 80
+#   Tint rgb:00/11/22 80
+#   fg rgb:55/ff/ee,\
+#   fg rgb:bb/dd/cc,\
+#   bg rgb:33/44/55
+#   RootTransparent buffer,\
+#   fg rgb:55/ff/ee,\
+#   bg Average,\
+#   Tint rgb:00/11/22 80
+
+#HilightColor white gold
+
+# ....................{ STYLES                             }....................
+
+# ....................{ STYLES ~ submenu                   }....................
+# Move parent menus if required to avoid displaying submenus offscreen.
+MenuStyle * Animation
+
+# Delay opening and closing submenus to avoid accidental submenu operations.
+MenuStyle * PopupDelayed,   PopupDelay   256
+MenuStyle * PopdownDelayed, PopdownDelay 256
+
+# Immediately open submenus when the cursor enters any horizontal pixel from
+# "$[menu.width] * ($[popup.active_area] / 100)" to "$[menu.width]", where:
+#
+# * "$[menu.width]" is the pixel width of the current menu.
+# * "$[popup.active_area]" is the percentage of such width at which to begin the
+#   active area, specified by the integer below.
+MenuStyle * PopupActiveArea 84
+
+# Display submenus overlapping their parent menus and offset to the right by
+# pixels "$[parent.width] * ($[popup.offset] / 100)", where:
+#
+# * "$[parent.width]" is the pixel width of such parent menu.
+# * "$[popup.offset]" is the percentage of such width to offset, specified by
+#   the second integer below, where:
+#   * Negative percentages offset to the left of parent menus.
+#   * Positive percentages offset to the left of parent menus.
+MenuStyle * PopupOffset 0 64
+
+# Implicitly warp the cursor to submenu titles on opening submenus *IF* the
+# cursor is already inside such submenu. (This avoids accidental submenu
+# operations.)
+MenuStyle * TitleWarp
+
+# ....................{ STYLES ~ color                     }....................
+# Set default menu colors.
+MenuStyle * MenuColorset $[FLUVIOL_COLORSET_MENU_DEFAULT]
+
+# Set menu title colors.
+MenuStyle * TitleColorset $[FLUVIOL_COLORSET_MENU_TITLE]
+
+# Set selected menu item colors.
+MenuStyle * ActiveColorset $[FLUVIOL_COLORSET_MENU_ITEM_SELECTED]
+
+# Apply such colors to selected menu items. Since FVWM sadly misapplies
+# "RootTransparent" colorsets to highlighted backgrounds, do not do so.
+MenuStyle * ActiveFore, !HilightBack
+
+#FIXME: Can't be bothered to get this to work, at the moment. While this style
+#is technically correct, FVWM fails to display such colors unless also setting a
+#SidePic. From an online forum, this should resemble:
+#
+# MenuStyle "*" SidePic $[fvwm_home]/sidepic.png
+# MenuStyle "*" SideColor #333333
+#
+#Comments: "sidepic.png is a picture of 4x4 pixels, filled with the solid color
+##333333, wich is a very dark grey, I think that in X list is is grey20, or
+#something around that. So, that is the color that I use also in SideColor. If
+#you want to change the color just edit the image, fill it with another color
+#and then change Sidecolor acordingly. This is done because fvwm does not fill a
+#sidecolor unless a sidepic is present."
+#MenuStyle * SideColor rgb:11/bb/aa
+
+# ....................{ STYLES ~ object                    }....................
+# Do not highlight selected menu items with a bezel relief.
+MenuStyle * Hilight3DThickness 1
+
+# Separate menu edges from menu item separators with a slight number of pixels.
+MenuStyle * SeparatorsShort
+
+# Display this many lines underneath menu titles. FVWM supports only 0, 1, or 2.
+MenuStyle * TitleUnderlines0
+
+# Display submenu triangles with opaque rather than transparent foregrounds.
+MenuStyle * TrianglesSolid
+
 # ....................{ DEFINERS                           }....................
 # void DefineMenu(string menuName, string menuDescription, string menuCode)
 #
@@ -33,20 +158,6 @@
 DefineFunc DefineMenu
 + I DestroyMenu $0
 + I   AddToMenu $*
-
-# ....................{ COLORSETS                          }....................
-# Define a transparent colorset to be subsequently applied to menus. Option
-# "RootTransparent" is considerably more efficient and aesthetic than option
-# "Transparent" but requires a sufficiently capable wallpaper-setting utility
-# (e.g., "fvwm-root -r", "Esetroot", "wmsetbg").
-DefineColorset FLUVIOL_COLORSET_MENU\
-    RootTransparent buffer,\
-    fg rgb:33/dd/cc,\
-    bg Average,\
-    Tint rgb:00/11/22 80
-
-# Apply the prior colorset to all menus.
-MenuStyle * MenuColorset $[FLUVIOL_COLORSET_MENU]
 
 # ....................{ MENUS                              }....................
 
