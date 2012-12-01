@@ -37,8 +37,11 @@ DefineColorset FLUVIOL_COLORSET_MENU_DEFAULT\
     Background Average,\
     Tint rgb:00/11/22 88,\
     Hilight rgb:66/44/44,\
-    Shadow  rgb:66/55/66
-#   Shadow  rgb:55/44/55
+    Shadow  rgb:55/44/55
+#   Shadow  rgb:44/33/44
+#   Hilight rgb:66/44/44,\
+#   Shadow  rgb:66/55/66
+#   Hilight rgb:55/33/33,\
 #   Shadow  rgb:33/55/66
 #   Shadow  rgb:77/55/55
 #   Shadow  rgb:44/22/22
@@ -148,8 +151,9 @@ MenuStyle * SeparatorsShort
 # Display this many lines underneath menu titles. FVWM supports only 0, 1, or 2.
 MenuStyle * TitleUnderlines0
 
-# Display submenu triangles with opaque rather than transparent foregrounds.
-MenuStyle * TrianglesSolid
+# Display submenu triangles with opaque rather than transparent foregrounds in
+# the menu foreground color.
+MenuStyle * TrianglesSolid, TrianglesUseFore
 
 # ....................{ DEFINERS                           }....................
 # void DefineMenu(string menuName, string menuDescription, string menuCode)
