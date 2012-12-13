@@ -56,7 +56,7 @@ SetEnv FLUVIOL_KEYMAP Dvorak
 # This is beyond the scope of this recipe; for details, see:
 #
 #   http://arun.wordpress.com/2008/03/15/real-transparency-in-urxvt/
-SetPreferredCommand FLUVIOL_XTERM_COMMAND "urxvtc urxvt aterm eterm"
+SetPreferredCommand FLUVIOL_XTERM_COMMAND "urxvt aterm eterm"
 
 # Command-line arguments to be passed to $[FLUVIOL_XTERM_COMMAND] whenever that program
 # is run to create a new console window.
@@ -255,5 +255,6 @@ SetEnv FLUVIOL_WALLPAPER_HOME "$[HOME]/pub/image/sijun"
 SetPreferredCommand FLUVIOL_WALLPAPER_COMMAND "Esetroot feh habak"
 
 # --------------------( WASTELANDS                         )--------------------
+#SetPreferredCommand FLUVIOL_XTERM_COMMAND "urxvtc urxvt aterm eterm"
 # This is often a restricted shell, so as to prevent execution of dangerous
 # commands from the Folque.

@@ -88,6 +88,8 @@ DefineFunc Bind
 + I Key $0 $[FLUVIOL_CONTEXT_ANY] $[1-]
 
 # ....................{ FLUAKE                             }....................
+#FIXME: Shift entire section to "console/fluake" please.
+
 # The resource name assigned to each Fluake on console creation.
 SetEnv FLUVIOL_FLUAKE_NAME "Fluake"
 

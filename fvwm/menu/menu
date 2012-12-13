@@ -77,40 +77,7 @@ DefineColorset FLUVIOL_COLORSET_MENU_ITEM_SELECTED\
 #   bg Average,\
 #   Tint rgb:00/11/22 80
 
-#HilightColor white gold
-
 # ....................{ STYLES                             }....................
-
-# ....................{ STYLES ~ submenu                   }....................
-# Move parent menus if required to avoid displaying submenus offscreen.
-MenuStyle * Animation
-
-# Delay opening and closing submenus to avoid accidental submenu operations.
-MenuStyle * PopupDelayed,   PopupDelay   256
-MenuStyle * PopdownDelayed, PopdownDelay 256
-
-# Immediately open submenus when the cursor enters any horizontal pixel from
-# "$[menu.width] * ($[popup.active_area] / 100)" to "$[menu.width]", where:
-#
-# * "$[menu.width]" is the pixel width of the current menu.
-# * "$[popup.active_area]" is the percentage of such width at which to begin the
-#   active area, specified by the integer below.
-MenuStyle * PopupActiveArea 84
-
-# Display submenus overlapping their parent menus and offset to the right by
-# pixels "$[parent.width] * ($[popup.offset] / 100)", where:
-#
-# * "$[parent.width]" is the pixel width of such parent menu.
-# * "$[popup.offset]" is the percentage of such width to offset, specified by
-#   the second integer below, where:
-#   * Negative percentages offset to the left of parent menus.
-#   * Positive percentages offset to the left of parent menus.
-MenuStyle * PopupOffset 0 64
-
-# Implicitly warp the cursor to submenu titles on opening submenus *IF* the
-# cursor is already inside such submenu. (This avoids accidental submenu
-# operations.)
-MenuStyle * TitleWarp
 
 # ....................{ STYLES ~ color                     }....................
 # Set default menu colors.
@@ -141,6 +108,13 @@ MenuStyle * ActiveFore, !HilightBack
 #sidecolor unless a sidepic is present."
 #MenuStyle * SideColor rgb:11/bb/aa
 
+# ....................{ STYLES ~ hotkey                    }....................
+# Do not automatically define hotkeys for menu items with no predefined hotkeys.
+MenuStyle * !AutomaticHotkeys
+
+# Activate rather than merely select menu items on entering hotkeys.
+MenuStyle * UniqueHotkeyActivatesImmediate
+
 # ....................{ STYLES ~ object                    }....................
 # Do not highlight selected menu items with a bezel relief.
 MenuStyle * Hilight3DThickness 1
@@ -155,6 +129,40 @@ MenuStyle * TitleUnderlines0
 # the menu foreground color.
 MenuStyle * TrianglesSolid, TrianglesUseFore
 
+# ....................{ STYLES ~ submenu                   }....................
+# Move parent menus if required to avoid displaying submenus offscreen.
+MenuStyle * Animation
+
+# Delay opening and closing submenus to avoid accidental submenu operations.
+MenuStyle * PopupDelayed,   PopupDelay   256
+MenuStyle * PopdownDelayed, PopdownDelay 256
+
+# Immediately open submenus when the cursor enters any horizontal pixel from
+# "$[menu.width] * ($[popup.active_area] / 100)" to "$[menu.width]", where:
+#
+# * "$[menu.width]" is the pixel width of the current menu.
+# * "$[popup.active_area]" is the percentage of such width at which to begin the
+#   active area, specified by the integer below.
+MenuStyle * PopupActiveArea 84
+
+# Display submenus overlapping their parent menus and offset to the right by
+# pixels "$[parent.width] * ($[popup.offset] / 100)", where:
+#
+# * "$[parent.width]" is the pixel width of such parent menu.
+# * "$[popup.offset]" is the percentage of such width to offset, specified by
+#   the second integer below, where:
+#   * Negative percentages offset to the left of parent menus.
+#   * Positive percentages offset to the left of parent menus.
+MenuStyle * PopupOffset 0 64
+
+# Display submenus to the right rather than left of parent menus.
+MenuStyle * SubmenusRight
+
+# Implicitly warp the cursor to submenu titles on opening submenus *IF* the
+# cursor is already inside such submenu. (This avoids accidental submenu
+# operations.)
+MenuStyle * TitleWarp
+
 # ....................{ DEFINERS                           }....................
 # void DefineMenu(string menuName, string menuDescription, string menuCode)
 #
@@ -165,6 +173,8 @@ DefineFunc DefineMenu
 
 # ....................{ MENUS                              }....................
 
+#FIXME: After verifying this works, dynamically create as Exec() output itself
+#parsing "xrandr -q" (?) output. Yum!
 # As a fallback in the inevitable event of catastrophic resolution change, add a
 # menu switching between commonly supported resolutions.
 DefineMenu SetScreenResolution 'Screen Resolution'
@@ -185,6 +195,8 @@ DefineMenu SetScreenResolution 'Screen Resolution'
 + '&2 640x480'   SetScreenResolution 640x480
 
 # --------------------( WASTELANDS                         )--------------------
+#HilightColor white gold
+
 #   fg rgb:44/ee/dd,\
 #   Tint rgb:00/22/33 80
 #   Tint rgb:00/77/77 77

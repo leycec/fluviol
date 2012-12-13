@@ -179,7 +179,6 @@ DefineFunc SetReturnCodeToError
 #constitute genuine FVWM syntax. Ah, the latter, actually; "[" and "]" are
 #requisite FVWM syntax for all variable names of more than one character.
 
-#FIXME: Rename to DieUnless() and make above changes.
 # void OrDie(integer priorFunctionCondRc, string errorMessage)
 #
 # If the current return code (as returned by the prior FVWM command) indicates
@@ -363,13 +362,7 @@ DefineFunc ForkCommandAndWait
 DefineFunc Import
 + I Log loading "$[0]"...
 + I Read $[0] quiet
-#FIXME: This isn't actually working. Easy to test: just pass a random path. It
-#superficially appears to work, since "... failed!" never appears, but doesn't
-#actually work, of course. Hmm. Ah; right. See above! We probably want to
-#replace with something like:
-#+ I DieUnless $[cond.rc] loading "$[0]"... failed!
-+ I OrDie loading "$[0]"... failed!
-#+ I OrDie cannot import "$[0]"!
++ I TestRc (NoMatch) Log loading "$[0]"... failed!
 
 #FIXME: S*w*e*e*t. We can seamlessly extend this function to support user-
 #specific configuration. It's simple: just have this function first search for
@@ -396,16 +389,17 @@ DefineFunc ImportFluviol
 
 # Define core FVWM functionality and global variables prior to importing all
 # other Fluviol components. Order is important.
-ImportFluviol fvwm/main
-ImportFluviol global/main
+ImportFluviol fvwm/fvwm
+ImportFluviol global/global
 
 # Import all other Fluviol components. Order is (hopefully) not important.
-ImportFluviol command/main
-ImportFluviol input/main
-ImportFluviol menu/main
-ImportFluviol page/main
-ImportFluviol window/main
-ImportFluviol x/main
+ImportFluviol command/command
+ImportFluviol console/console
+ImportFluviol input/input
+ImportFluviol menu/menu
+ImportFluviol page/page
+ImportFluviol window/window
+ImportFluviol x/x
 
 # ....................{ WINDOW PLACEMENT                   }....................
 # Place windows by avoiding overlapping. (Grep "Window Manager placement" in
@@ -675,6 +669,7 @@ DefineFunc ScreenshotScreen I RunCommand $[FLUVIOL_SCREENSHOT_REGION_COMMAND]
 #DefineFunc LowerVolume I RunCommand $[FLUVIOL_LOWER_VOLUME_COMMAND]
 #DefineFunc RaiseVolume I RunCommand $[FLUVIOL_RAISE_VOLUME_COMMAND]
 
+# --------------------( WASTELANDS                         )--------------------
 # ....................{ XTERM CONSOLE                      }....................
 # Create a new console window. This function ensures a sane environment prior to
 # creating the console window: in particular, if "$[FLUVIOL_XTERM_COMMAND]" is "urxvtc",
@@ -683,14 +678,14 @@ DefineFunc ScreenshotScreen I RunCommand $[FLUVIOL_SCREENSHOT_REGION_COMMAND]
 #
 # Fluakes and Folques call this function on creation to create their
 # underlying console windows.
-DefineFunc MakeConsole
-+ I Test (x $[FLUVIOL_XTERM_COMMAND]) KeepRc MakeConsoleInternal $*
-+ I OrDie   $[FLUVIOL_XTERM_COMMAND] not found; not creating console!
+#DefineFunc MakeConsole
+#+ I Test (x $[FLUVIOL_XTERM_COMMAND]) KeepRc MakeConsoleInternal $*
+#+ I OrDie   $[FLUVIOL_XTERM_COMMAND] not found; not creating console!
 
-DefineFunc MakeConsoleInternal
-+ I Test (EnvMatch FLUVIOL_XTERM_COMMAND "*urxvtc") \
-    DaemonizeAndWait urxvtd --opendisplay --quiet --fork
-+ I Exec $*
+#DefineFunc MakeConsoleInternal
+#+ I Test (EnvMatch FLUVIOL_XTERM_COMMAND "*urxvtc") \
+#    DaemonizeAndWait urxvtd --opendisplay --quiet --fork
+#+ I Exec $*
 
 # ....................{ FLUAKE                             }....................
 #FIXME: Fairly obsolete, yes? I assume we solved this, somehow.
@@ -702,11 +697,11 @@ DefineFunc MakeConsoleInternal
 # (This obtains the desired effect, though slightly hackily.)
 #ipeRead 'echo SetEnv FLUVIOL_FLUAKE_WIDTH $(expr $[vp.width])'
 
-DefineFunc ToggleOrMakeFluake
-+ I Next ($[FLUVIOL_FLUAKE]) KeepRc ToggleFluake
-+ I TestRc (NoMatch) MakeFluake
+#DefineFunc ToggleOrMakeFluake
+#+ I Next ($[FLUVIOL_FLUAKE]) KeepRc ToggleFluake
+#+ I TestRc (NoMatch) MakeFluake
 
-DefineFunc ToggleFluake
+#DefineFunc ToggleFluake
 # If this Fluake is not maximized, forcefully guarantee it has the
 # proper position and size according to the $[FLUVIOL_FLUAKE_SIZE_POSITION]
 # variable. (This is rather forceful. Though it does guarantee proper window
@@ -716,16 +711,16 @@ DefineFunc ToggleFluake
 #FIXME: Oddly, I now receive the following error when uncommenting this:
 #      "Unrecognised condition "Maximized" in TestRc command."
 #+ I TestRc (!Maximized) SkinFluake
-+ I ToggleWindowShading
+#+ I ToggleWindowShading
 
-AddToFunc StartFunction
+#AddToFunc StartFunction
 # Set the number of Fluakes in current use to 0, unless already set. (As
 # the "StartFunction" is called on both start and restart, this ensures that we
 # do not overwrite an already extant count of the number of Fluakes.)
-+ I SetEnvIfUnset FLUVIOL_FLUAKE_NAME_COUNT 0
+#+ I SetEnvIfUnset FLUVIOL_FLUAKE_NAME_COUNT 0
 # Destroy our record of Fluake unique names. This shouldn't be necessary,
 # but is a necessary precaution.
-+ I UnsetEnv FLUVIOL_FLUAKE_UNIQUE_NAME
+#+ I UnsetEnv FLUVIOL_FLUAKE_UNIQUE_NAME
 
 #FIXME: I'm seeing occasional spurious behaviour from this usage of
 #"FLUVIOL_FLUAKE_UNIQUE_NAME". This is clearly a terrible way of achieving this
@@ -745,20 +740,20 @@ AddToFunc StartFunction
 #works on window names, I reckon that should suffice, yes? *GENIUS*, if so. It'd
 #cleanly solve all the subtle issues I've hit with Fluake consoles over the years.
 #====================================
-DefineFunc MakeFluake
-+ I Log creating fluake on ($[desk.n]:$[page.nx],$[page.ny])...
+#DefineFunc MakeFluake
+#+ I Log creating fluake on ($[desk.n]:$[page.nx],$[page.ny])...
 #FIXME: Can the following two commands be implemented as one command (possibly
 #as the output of a piped script!), so as to eliminate deadlocks and such?
 # Prevent re-entrance; that is, prevent the above "ToggleOrMakeFluake"
 # function from recalling this function, if that function is still currently in
 # a call to this function.
-+ I Test (EnvIsSet FLUVIOL_FLUAKE_UNIQUE_NAME) Break
+#+ I Test (EnvIsSet FLUVIOL_FLUAKE_UNIQUE_NAME) Break
 # Devise a unique window name for this Fluake. Why? So that, in the
 # above, hypothetical case of having two Fluakes on the same page, we may
 # differentiate between the old, genuine Fluake for that page and the
 # newly created Fluake, which should be moved to another page.
-+ I SetEnv FLUVIOL_FLUAKE_UNIQUE_NAME \
-         $[FLUVIOL_FLUAKE_NAME]$[FLUVIOL_FLUAKE_NAME_COUNT]
+#+ I SetEnv FLUVIOL_FLUAKE_UNIQUE_NAME \
+#         $[FLUVIOL_FLUAKE_NAME]$[FLUVIOL_FLUAKE_NAME_COUNT]
 # Log the beginning of this event as soon as possible (i.e., here!).
 #+ I Log creating fluake on ($[desk.n]:$[page.nx],$[page.ny])...
 # Record which page this Fluake was created on. Why? Because the user may
@@ -769,96 +764,103 @@ DefineFunc MakeFluake
 # have had a Fluake created for it. In this case, the newly created Kuake
 # console must be moved back to the page for which it was intended and for which
 # there were no existing, conflicting Fluakes. Confused? So were we.
-+ I SetEnv FLUVIOL_FLUAKE_CREATED_ON_PAGE_X $[page.nx]
-+ I SetEnv FLUVIOL_FLUAKE_CREATED_ON_PAGE_Y $[page.ny]
+#+ I SetEnv FLUVIOL_FLUAKE_CREATED_ON_PAGE_X $[page.nx]
+#+ I SetEnv FLUVIOL_FLUAKE_CREATED_ON_PAGE_Y $[page.ny]
 # Create the Fluake, and provide it a unique icon name.
-+ I MakeConsole $[FLUVIOL_FLUAKE_COMMAND_PRE] \
-                $[FLUVIOL_FLUAKE_COMMAND_ICON_NAME] $[FLUVIOL_FLUAKE_UNIQUE_NAME] \
-                $[FLUVIOL_FLUAKE_COMMAND_POST]
+#+ I MakeConsole $[FLUVIOL_FLUAKE_COMMAND_PRE] \
+#                $[FLUVIOL_FLUAKE_COMMAND_ICON_NAME] $[FLUVIOL_FLUAKE_UNIQUE_NAME] \
+#                $[FLUVIOL_FLUAKE_COMMAND_POST]
 # Wait for its appearance. We cannot wait on window icon names, in FVWM; so,
 # wait on its window name, instead.
-+ I Wait "$[FLUVIOL_FLUAKE_NAME]"
+#+ I Wait "$[FLUVIOL_FLUAKE_NAME]"
 # Style this Fluake. Conditions, unlike the "Wait" command, can select
 # window icon names. Thus, as that provides a more specific condition, we select
 # on its icon name. (Among other things, this moves this Fluake to its
 # proper page, if needed).
-+ I Next ("$[FLUVIOL_FLUAKE_UNIQUE_NAME]", CirculateHit) \
-    StyleFluake $[FLUVIOL_FLUAKE_CREATED_ON_PAGE_X] \
-                $[FLUVIOL_FLUAKE_CREATED_ON_PAGE_Y]
+#+ I Next ("$[FLUVIOL_FLUAKE_UNIQUE_NAME]", CirculateHit) \
+#    StyleFluake $[FLUVIOL_FLUAKE_CREATED_ON_PAGE_X] \
+#                $[FLUVIOL_FLUAKE_CREATED_ON_PAGE_Y]
 # Increment our count of the number of Fluakes, now.
-+ I PipeRead \
-  'echo SetEnv FLUVIOL_FLUAKE_NAME_COUNT $(expr $[FLUVIOL_FLUAKE_NAME_COUNT] + 1)'
+#+ I PipeRead \
+#  'echo SetEnv FLUVIOL_FLUAKE_NAME_COUNT $(expr $[FLUVIOL_FLUAKE_NAME_COUNT] + 1)'
 # Destroy our record of which page this Fluake was created on, now that
 # we have created it.
-+ I UnsetEnv FLUVIOL_FLUAKE_CREATED_ON_PAGE_Y
-+ I UnsetEnv FLUVIOL_FLUAKE_CREATED_ON_PAGE_X
+#+ I UnsetEnv FLUVIOL_FLUAKE_CREATED_ON_PAGE_Y
+#+ I UnsetEnv FLUVIOL_FLUAKE_CREATED_ON_PAGE_X
 # Destroy our record of this Fluake's unique name. This should be last.
-+ I UnsetEnv FLUVIOL_FLUAKE_UNIQUE_NAME
+#+ I UnsetEnv FLUVIOL_FLUAKE_UNIQUE_NAME
 # Log the ending of this event as late as possible (i.e., here!).
-+ I Log creating fluake on ($[desk.n]:$[page.nx],$[page.ny])... done.
+#+ I Log creating fluake on ($[desk.n]:$[page.nx],$[page.ny])... done.
 
 # Style the newly created Fluake.
-DefineFunc StyleFluake
-+ I MoveToPage $0 $1
-+ I SkinFluake
+#DefineFunc StyleFluake
+#+ I MoveToPage $0 $1
+#+ I SkinFluake
 
 # Skin the current window: hopefully, a Fluake. This establishes this
 # console's window position and size, among other window properties.
-DefineFunc SkinFluake
+#DefineFunc SkinFluake
 # First, establish this console's unmaximized window position and size.
 # Then, maximize this console. (By decoupling window maximization from window
 # positioning and sizing, we allow unmaximization of console windows to the
 # unmaximized window position and size below. Surely, it is sweet.)
-+ I ResizeMoveMaximize $[FLUVIOL_FLUAKE_SIZE_POSITION]
+#+ I ResizeMoveMaximize $[FLUVIOL_FLUAKE_SIZE_POSITION]
 
-DestroyStyle Fluake
+#DestroyStyle Fluake
 
 # Prevent Fluakes from having their focus siezed by new windows.
-Style Fluake FPOverrideGrabFocus, EWMHMaximizeIgnoreWorkingArea
+#Style Fluake FPOverrideGrabFocus, EWMHMaximizeIgnoreWorkingArea
 
 # Prevent Fluakes from appearing on the window list.
-Style Fluake WindowListSkip, CirculateSkip
+#Style Fluake WindowListSkip, CirculateSkip
 
 # Prevent Fluakes from resizing themselves.
-Style Fluake FixedSize
+#Style Fluake FixedSize
 
 # ....................{ FOLQUE                             }....................
-DefineFunc ToggleOrMakeFolque
-+ I All    ($[FLUVIOL_FOLQUE]) KeepRc ToggleWindowShading
-+ I TestRc (NoMatch)            MakeFolque
+#DefineFunc ToggleOrMakeFolque
+#+ I All    ($[FLUVIOL_FOLQUE]) KeepRc ToggleWindowShading
+#+ I TestRc (NoMatch)            MakeFolque
 
-DefineFunc MakeFolque
-+ I KillFolque
-+ I Log creating folque...
-+ I MakeConsole $[FLUVIOL_FOLQUE_COMMAND]
-+ I Wait "$[FLUVIOL_FOLQUE_NAME]"
-+ I All ($[FLUVIOL_FOLQUE]) StyleFolque
-+ I Log creating folque... done.
+#DefineFunc MakeFolque
+#+ I KillFolque
+#+ I Log creating folque...
+#+ I MakeConsole $[FLUVIOL_FOLQUE_COMMAND]
+#+ I Wait "$[FLUVIOL_FOLQUE_NAME]"
+#+ I All ($[FLUVIOL_FOLQUE]) StyleFolque
+#+ I Log creating folque... done.
 
-DefineFunc KillFolque
-+ I All ($[FLUVIOL_FOLQUE]) Silent Close
-+ I TestRc (Match) Log killed folque...
+#DefineFunc KillFolque
+#+ I All ($[FLUVIOL_FOLQUE]) Silent Close
+#+ I TestRc (Match) Log killed folque...
 
 # Minimize Folque to a single-line, small-width console situated just
 # slightly above the lower-left edge of the screen.
-DefineFunc StyleFolque
-+ I ThisWindow ResizeMove $[FLUVIOL_FOLQUE_SIZE_POSITION]
+#DefineFunc StyleFolque
+#+ I ThisWindow ResizeMove $[FLUVIOL_FOLQUE_SIZE_POSITION]
 
-DestroyStyle Folque
+#DestroyStyle Folque
 
 # Share Folque across every desktop and desktop page.
-Style Folque Sticky
+#Style Folque Sticky
 
 # Allow Folque to have their focus siezed by new windows.
-Style Folque FPOverrideGrabFocus, EWMHMaximizeIgnoreWorkingArea
+#Style Folque FPOverrideGrabFocus, EWMHMaximizeIgnoreWorkingArea
 
 # Prevent Folque from appearing on the window list.
-Style Folque WindowListSkip, CirculateSkip
+#Style Folque WindowListSkip, CirculateSkip
 
 # Allow Folque to move or resize itself.
-Style Folque VariablePosition, VariableSize
+#Style Folque VariablePosition, VariableSize
 
-# --------------------( WASTELANDS                         )--------------------
+#FIXME: This isn't actually working. Easy to test: just pass a random path. It
+#superficially appears to work, since "... failed!" never appears, but doesn't
+#actually work, of course. Hmm. Ah; right. See above! We probably want to
+#replace with something like:
+#+ I DieUnless $[cond.rc] loading "$[0]"... failed!
+#+ I OrDie cannot import "$[0]"!
+
+#FIXME: Rename to DieUnlessSuccess() and make above changes.
 #IndexedWindowName, IndexedIconName
 # * It's time. Github this already. We're risking catastrophic failure with our
 #   laziness -- and that's just not cool, bro.

@@ -1,0 +1,50 @@
+# -*- mode: fvwm -*-
+# ====================[ folque                             ]====================
+#
+# --------------------( LICENSE                            )--------------------
+# Copyright 2007-2012 by Cecil Curry.
+# See "COPYING" for additional details.
+#
+# --------------------( SYNOPSIS                           )--------------------
+# Handle "xterm"-like console applications configured as "bang" bars (!): i.e.,
+# as persistent, per-desktop, quarter-screen consoles.
+
+# ....................{ STYLES                             }....................
+# Reset Folque styles.
+DestroyStyle Folque
+
+# Share Folque across every desktop and desktop page.
+Style Folque Sticky
+
+# Allow Folque to have its focus siezed by new windows.
+Style Folque FPOverrideGrabFocus, EWMHMaximizeIgnoreWorkingArea
+
+# Avoid listing Folque on window lists.
+Style Folque WindowListSkip, CirculateSkip
+
+# Allow Folque to move or resize itself.
+Style Folque VariablePosition, VariableSize
+
+# ....................{ FOLQUE                             }....................
+DefineFunc ToggleOrMakeFolque
++ I All    ($[FLUVIOL_FOLQUE]) KeepRc ToggleWindowShading
++ I TestRc (NoMatch)            MakeFolque
+
+DefineFunc MakeFolque
++ I KillFolque
++ I Log creating folque...
++ I MakeConsole $[FLUVIOL_FOLQUE_COMMAND]
++ I Wait "$[FLUVIOL_FOLQUE_NAME]"
++ I All ($[FLUVIOL_FOLQUE]) StyleFolque
++ I Log creating folque... done.
+
+DefineFunc KillFolque
++ I All ($[FLUVIOL_FOLQUE]) Silent Close
++ I TestRc (Match) Log killed folque...
+
+# Minimize Folque to a single-line, small-width console situated just
+# slightly above the lower-left edge of the screen.
+DefineFunc StyleFolque
++ I ThisWindow ResizeMove $[FLUVIOL_FOLQUE_SIZE_POSITION]
+
+# --------------------( WASTELANDS                         )--------------------

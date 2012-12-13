@@ -8,13 +8,20 @@
 # --------------------( SYNOPSIS                           )--------------------
 # Handle core FVWM fonts.
 
+# ....................{ GLOBALS                            }....................
+#FIXME: Shift to configuration file.
+# Default sans serif font
+SetEnv FLUVIOL_FONT_SANS_SERIF_LARGER  "xft:sans-serif:pixelsize=18"
+SetEnv FLUVIOL_FONT_SANS_SERIF_DEFAULT "xft:sans-serif:pixelsize=16"
+SetEnv FLUVIOL_FONT_SANS_SERIF_SMALLER "xft:sans-serif:pixelsize=14"
+
 # ....................{ DEFAULTS                           }....................
-#FIXME: Nice, but the font size should ideally be in proportion to current DPI.
-#Any idea how to generalize?
-DefaultFont "xft:sans-serif:pixelsize=16"
+DefaultFont $[FLUVIOL_FONT_SANS_SERIF_DEFAULT]
 #DefaultFont "xft:serif:pixelsize=16"
 #DefaultFont "xft:monospace:pixelsize=16"
 
 # --------------------( WASTELANDS                         )--------------------
+#FIXME: Nice, but the font size should ideally be in proportion to current DPI.
+#Any idea how to generalize?
 # (This function is run once
 # and only once; thus, it makes a respectable pad for launching daemons.)

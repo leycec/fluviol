@@ -1,0 +1,34 @@
+# -*- mode: fvwm -*-
+# ====================[ console                            ]====================
+#
+# --------------------( LICENSE                            )--------------------
+# Copyright 2007-2012 by Cecil Curry.
+# See "COPYING" for additional details.
+#
+# --------------------( SYNOPSIS                           )--------------------
+# Handle "xterm"-like console applications.
+
+# ....................{ MAKERS                             }....................
+# void MakeConsole(void)
+#
+# Create a new console window. This function ensures a sane environment prior to
+# creating the console window: in particular, if "$[FLUVIOL_XTERM_COMMAND]" is
+# "urxvtc", then this function ensures that "urxvtd" has already been executed
+# and, if not, does so.
+#
+# Fluakes and Folques call this function on creation to create their
+# underlying console windows.
+DefineFunc MakeConsole
++ I Test (x $[FLUVIOL_XTERM_COMMAND]) KeepRc MakeConsoleInternal $*
++ I OrDie   $[FLUVIOL_XTERM_COMMAND] not found; not creating console!
+
+DefineFunc MakeConsoleInternal
++ I Test (EnvMatch FLUVIOL_XTERM_COMMAND "*urxvtc") \
+    DaemonizeAndWait urxvtd --opendisplay --quiet --fork
++ I Exec $*
+
+# ....................{ DEPENDENTS                         }....................
+Import $./fluake
+Import $./folque
+
+# --------------------( WASTELANDS                         )--------------------

@@ -1,0 +1,151 @@
+# -*- mode: fvwm -*-
+# ====================[ fluake                             ]====================
+#
+# --------------------( LICENSE                            )--------------------
+# Copyright 2007-2012 by Cecil Curry.
+# See "COPYING" for additional details.
+#
+# --------------------( SYNOPSIS                           )--------------------
+# Handle "xterm"-like console applications configured as Kuake consoles: i.e.,
+# as Quake-inspired, per-desktop page, persistent, full-screen consoles.
+
+# ....................{ STYLES                             }....................
+# Reset Fluake styles.
+DestroyStyle Fluake
+
+# Prevent Fluakes from having their focus siezed by new windows.
+Style Fluake FPOverrideGrabFocus, EWMHMaximizeIgnoreWorkingArea
+
+# Avoid listing Fluakes on window lists.
+Style Fluake WindowListSkip, CirculateSkip
+
+# Prevent Fluakes from resizing themselves.
+Style Fluake FixedSize
+
+# ....................{ FLUAKE                             }....................
+#FIXME: Fairly obsolete, yes? I assume we solved this, somehow. Well, I haven't
+#seen a maximization issue in quite awhile, so... I'm confident that, after
+#implementing the InitialMapCommand() fix below, we can safely excise this
+#entirely.
+# Fluakes tend not to maximize properly. Specifically, console windows
+# tend to align their width along strict character boundries--which increases
+# the likelihood of a Fluake failing to consume all possible horizontal
+# pixels on an FVWM "Maximize 100 100" command. Consequently, we brutally force
+# Fluakes to consume slightly more than one screen's width of the screen.
+# (This obtains the desired effect, though slightly hackily.)
+#ipeRead 'echo SetEnv FLUVIOL_FLUAKE_WIDTH $(expr $[vp.width])'
+
+DefineFunc ToggleOrMakeFluake
++ I Next ($[FLUVIOL_FLUAKE]) KeepRc ToggleFluake
++ I TestRc (NoMatch) MakeFluake
+
+DefineFunc ToggleFluake
+#FIXME: Oddly, I now receive the following error when uncommenting this:
+#      "Unrecognised condition "Maximized" in TestRc command."
+#Anyway, how helpful is it to force this on users? If they want a de-maxified
+#console... who cares!? Just let them. Excise the call to SkinFluake() and thus
+#this lengthy comment, I reckon.
+# If this Fluake is not maximized, forcefully guarantee it has the
+# proper position and size according to the $[FLUVIOL_FLUAKE_SIZE_POSITION]
+# variable. (This is rather forceful. Though it does guarantee proper window
+# behaviour, it also prevents a user from customizing the unmaximized position
+# or size of these windows. You may still customize their maximized position
+# or size, however, via application of the "ResizeMoveMaximize" command.)
+#+ I TestRc (!Maximized) SkinFluake
++ I ToggleWindowShading
+
+AddToFunc StartFunction
+# Set the number of Fluakes in current use to 0, unless already set. (As
+# the "StartFunction" is called on both start and restart, this ensures that we
+# do not overwrite an already extant count of the number of Fluakes.)
++ I SetEnvIfUnset FLUVIOL_FLUAKE_NAME_COUNT 0
+# Destroy our record of Fluake unique names. This shouldn't be necessary,
+# but is a necessary precaution.
++ I UnsetEnv FLUVIOL_FLUAKE_UNIQUE_NAME
+
+#FIXME: I'm seeing occasional spurious behaviour from this usage of
+#"FLUVIOL_FLUAKE_UNIQUE_NAME". This is clearly a terrible way of achieving this
+#functionality. First of all, the variable should be renamed to
+#"FLUVIOL_FLUAKE_CREATION_LOCK". What one should be really be testing, however, is for
+#the existance of a console process resembling that of "urvtc" that has not
+#been assigned Fluake properties. That shouldn't be terribly hard to test, no?
+#
+#Ah-hah! I have it. The coordinates for the current page must be passed to the
+#shell command for creating fluake consoles. Then, instead of checking whether
+#an environment variable is set here, check whether a command exists in the
+#process list already having the coordinates for the current page. If yes,
+#Break. Otherwise, create it. Simple!
+#
+#====================================
+#I recently discovered the "InitialMapCommand" style. While I believe it only
+#works on window names, I reckon that should suffice, yes? *GENIUS*, if so. It'd
+#cleanly solve all the subtle issues I've hit with Fluake consoles over the years.
+#====================================
+DefineFunc MakeFluake
++ I Log creating fluake on ($[desk.n]:$[page.nx],$[page.ny])...
+#FIXME: Can the following two commands be implemented as one command (possibly
+#as the output of a piped script!), so as to eliminate deadlocks and such?
+# Prevent re-entrance; that is, prevent the above "ToggleOrMakeFluake"
+# function from recalling this function, if that function is still currently in
+# a call to this function.
++ I Test (EnvIsSet FLUVIOL_FLUAKE_UNIQUE_NAME) Break
+# Devise a unique window name for this Fluake. Why? So that, in the
+# above, hypothetical case of having two Fluakes on the same page, we may
+# differentiate between the old, genuine Fluake for that page and the
+# newly created Fluake, which should be moved to another page.
++ I SetEnv FLUVIOL_FLUAKE_UNIQUE_NAME \
+         $[FLUVIOL_FLUAKE_NAME]$[FLUVIOL_FLUAKE_NAME_COUNT]
+# Log the beginning of this event as soon as possible (i.e., here!).
+#+ I Log creating fluake on ($[desk.n]:$[page.nx],$[page.ny])...
+# Record which page this Fluake was created on. Why? Because the user may
+# move to another page after the "Exec" command finishes but before the "Wait"
+# command finishes; in such an (unfortunate, but common) case, the Fluake
+# will have been created on the new page to which the user moved to, and not the
+# original page from which the user moved. However, the new page may already
+# have had a Fluake created for it. In this case, the newly created Kuake
+# console must be moved back to the page for which it was intended and for which
+# there were no existing, conflicting Fluakes. Confused? So were we.
++ I SetEnv FLUVIOL_FLUAKE_CREATED_ON_PAGE_X $[page.nx]
++ I SetEnv FLUVIOL_FLUAKE_CREATED_ON_PAGE_Y $[page.ny]
+# Create the Fluake, and provide it a unique icon name.
++ I MakeConsole $[FLUVIOL_FLUAKE_COMMAND_PRE] \
+                $[FLUVIOL_FLUAKE_COMMAND_ICON_NAME] $[FLUVIOL_FLUAKE_UNIQUE_NAME] \
+                $[FLUVIOL_FLUAKE_COMMAND_POST]
+# Wait for its appearance. We cannot wait on window icon names, in FVWM; so,
+# wait on its window name, instead.
++ I Wait "$[FLUVIOL_FLUAKE_NAME]"
+# Style this Fluake. Conditions, unlike the "Wait" command, can select
+# window icon names. Thus, as that provides a more specific condition, we select
+# on its icon name. (Among other things, this moves this Fluake to its
+# proper page, if needed).
++ I Next ("$[FLUVIOL_FLUAKE_UNIQUE_NAME]", CirculateHit) \
+    StyleFluake $[FLUVIOL_FLUAKE_CREATED_ON_PAGE_X] \
+                $[FLUVIOL_FLUAKE_CREATED_ON_PAGE_Y]
+# Increment our count of the number of Fluakes, now.
++ I PipeRead \
+  'echo SetEnv FLUVIOL_FLUAKE_NAME_COUNT $(expr $[FLUVIOL_FLUAKE_NAME_COUNT] + 1)'
+# Destroy our record of which page this Fluake was created on, now that
+# we have created it.
++ I UnsetEnv FLUVIOL_FLUAKE_CREATED_ON_PAGE_Y
++ I UnsetEnv FLUVIOL_FLUAKE_CREATED_ON_PAGE_X
+# Destroy our record of this Fluake's unique name. This should be last.
++ I UnsetEnv FLUVIOL_FLUAKE_UNIQUE_NAME
+# Log the ending of this event as late as possible (i.e., here!).
++ I Log creating fluake on ($[desk.n]:$[page.nx],$[page.ny])... done.
+
+# Style the newly created Fluake.
+DefineFunc StyleFluake
++ I MoveToPage $0 $1
++ I SkinFluake
+
+#FIXME: Silly. We only call this above once.
+# Skin the current window: hopefully, a Fluake. This establishes this
+# console's window position and size, among other window properties.
+DefineFunc SkinFluake
+# First, establish this console's unmaximized window position and size.
+# Then, maximize this console. (By decoupling window maximization from window
+# positioning and sizing, we allow unmaximization of console windows to the
+# unmaximized window position and size below. Surely, it is sweet.)
++ I ResizeMoveMaximize $[FLUVIOL_FLUAKE_SIZE_POSITION]
+
+# --------------------( WASTELANDS                         )--------------------
