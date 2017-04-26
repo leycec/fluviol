@@ -46,15 +46,16 @@ DefineFunc AfterChangingWindowFocus
 # cannot entirely prevent) obscure race conditions.
 + I StoreLastFocusedWindowForCurrentPage
 + I ShadeAllShadyUnfocusedWindows
-+ I ChangeWindowFocusAsAGroup "Gimp*"
++ I RaiseAllGroupableWindows
 
 # After creating a new window, automatically raise that window.
 DefineFunc AfterCreatingWindow
++ I StyleWindowIfMaximal
++ I StyleWindowIfTopmost
 # By definition, transient windows are overlappable. See above.
 + I ThisWindow ($[FLUVIOL_OVERLAPPABLE_WINDOW]) Break
 + I ThisWindow (Transient) Break
-+ I ThisWindow ($[FLUVIOL_MAXIMAL_WINDOW]) Maximize True 100 100
-+ I ThisWindow RaiseWindowAndFocus
++ I RaiseWindowAndFocus
 
 # After leaving a temporary window with the mouse, automatically destroy that
 # window.
@@ -66,7 +67,134 @@ DefineFunc AfterLeavingWindow
 DefineFunc AfterDestroyingWindow
 + I RaiseLastFocusedWindowForCurrentPage
 
+# ....................{ SELECT                             }....................
+# Select the currently focused window if satisfying $[FLUVIOL_FOCUSABLE_WINDOW].
+# This is of principle use in definining sensible key bindings.
+DefineFunc CurrentWindow
++ I Current ($[FLUVIOL_FOCUSABLE_WINDOW]) $*
+
+# ....................{ RAISE                              }....................
+# Raise and unshade (but not focus) the current window.
+DefineFunc RaiseWindow
++ I ThisWindow Raise
++ I ThisWindow WindowShade False
+
+# Raise, unshade, and focus the current window.
+DefineFunc RaiseWindowAndFocus
++ I RaiseWindow
++ I ThisWindow Focus
+
+# void RaiseAllGroupableWindows()
+#
+# Raise all groupable focusable windows on the current page if the current
+# window is groupable.
+# 
+# That is, focusing any one window matching the passed condition automatically
+# causes all other windows which also match the passed condition to be focused;
+# similarly, defocusing any window matching the passed condition automatically
+# causes all other windows which also match the passed condition to be
+# defocused.
+#
+# This can be used to ensure, in particular, that GiMP windows focus and defocus
+# as a uniform group.
+DefineFunc RaiseAllGroupableWindows
++ I ThisWindow ($[FLUVIOL_GROUPABLE_WINDOW])\
+    All        ($[FLUVIOL_GROUPABLE_WINDOW], $[FLUVIOL_FOCUSABLE_WINDOW], !Raised)\
+    RaiseWindow
+
+# ....................{ SHADE                              }....................
+# Shade and lower the current window.
+DefineFunc ShadeWindow
++ I ThisWindow WindowShade True
++ I ThisWindow Lower
+
+# Shade, lower, and defocus the current window; then, unshade, raise, and
+# refocus the most recently focused window for the current desktop page.
+DefineFunc ShadeWindowAndRaisePreviousWindow
++ I ShadeWindow
++ I Prev ($[FLUVIOL_FOCUSABLE_WINDOW], !Shaded) RaiseWindowAndFocus
+
+# Raise and unshade the current window, if it's shaded; or lower and shade it,
+# otherwise.
+DefineFunc ToggleWindowShading
++ I ThisWindow (Shaded) KeepRc RaiseWindowAndFocus
++ I TestRc (NoMatch)           ShadeWindowAndRaisePreviousWindow
+
+# void ShadeAllShadyUnfocusedWindows()
+#
+# Shade all "shady," unfocused windows. This is typically called when changing
+# window focus away from the folque or a fluake, to shade that window.
+DefineFunc ShadeAllShadyUnfocusedWindows
++ I All ($[FLUVIOL_SHADY_WINDOW], $[FLUVIOL_FOCUSABLE_WINDOW], !Focused, !Shaded)\
+    ShadeWindow
+
+# ....................{ FOCUS                              }....................
+# Called by AfterChangingWindowFocus() to record the most recently
+# focused window for the current page.
+DefineFunc StoreLastFocusedWindowForCurrentPage
++ I All ($[FLUVIOL_RECALLABLE_WINDOW], !Focused) \
+    State $[FLUVIOL_IS_WINDOW_LAST_FOCUSED] False
++ I Current ($[FLUVIOL_RECALLABLE_WINDOW]) \
+    State $[FLUVIOL_IS_WINDOW_LAST_FOCUSED] True
+
+# Called by AfterChangingToNewPage() to restore the most recently
+# focused window for the current page.
+DefineFunc RaiseLastFocusedWindowForCurrentPage
+# If there is a recently focused window as recorded by the
+# "FLUVIOL_IS_WINDOW_LAST_FOCUSED" state, focus that window.
++ I Next ($[FLUVIOL_RECALLABLE_WINDOW], State $[FLUVIOL_IS_WINDOW_LAST_FOCUSED]) \
+    KeepRc RaiseWindowAndFocus
+# Otherwise, focus the window nearest the mouse cursor.
++ I TestRc (NoMatch) \
+    Next ($[FLUVIOL_RECALLABLE_WINDOW]) \
+    RaiseWindowAndFocus
+
+# Called by the WindowList as implementation of its window-switching.
+DefineFunc RaiseWindowToHeadOfWindowList
++ I FlipFocus
++ I RaiseWindowAndFocus
+
+# ....................{ WINDOW LIST                        }....................
+# Shows a well-decorated, descriptive window list while cycling forwards and
+# backwards through windows. (See "KEY BINDINGS", above.)
+DefineFunc ShowWindowList
+# Dismantled, this is:
+#
+# * "($[FLUVIOL_FOCUSABLE_WINDOW])", listing only focusable windows for the
+#   current page.
+# * "Root c c", positioning such list on the screen.
+# * "..., ...", customizing such list with ","-delimited options.
++ I WindowList ($[FLUVIOL_FOCUSABLE_WINDOW])\
+    Root c c\
+    Function RaiseWindowToHeadOfWindowList,\
+    CurrentAtEnd,\
+    MaxLabelWidth 40,\
+    NoCurrentDeskTitle, NoGeometry, NoHotkeys,\
+    SelectOnRelease $[FLUVIOL_KEY_MODIFIER_SUPER_UNIX]
+
+# ....................{ STYLERS                            }....................
+# void StyleWindowIfMaximal()
+#
+# Maximize the current window if such window is maximal.
+DefineFunc StyleWindowIfMaximal
++ I ThisWindow ($[FLUVIOL_MAXIMAL_WINDOW]) Maximize True 100 100
+
+# void StyleWindowIfTopmost()
+#
+# Enable the "StaysOnTop" style for the current window if such window is
+# topmost. While writing 'Style "$[FLUVIOL_TOPMOST_WINDOW]" StaysOnTop' would
+# be preferable, Style() accepts only "*" and "?" glob characters rather than
+# arbitrary glob characters (e.g., "|"). (In any case, this function suffices.)
+DefineFunc StyleWindowIfTopmost
++ I ThisWindow ($[FLUVIOL_TOPMOST_WINDOW]) Style "$[w.name]" Layer 6
+# + I ThisWindow ($[FLUVIOL_TOPMOST_WINDOW]) Style "$[w.name]" StaysOnTop
+
 # ....................{ REVERSE DEPENDENCIES               }....................
 Import $./identify
 
 # --------------------( WASTELANDS                         )--------------------
+# + I ChangeWindowFocusAsAGroup "Gimp*"
+# Change window focus for windows matching the passed condition as a group.
+# DefineFunc ChangeWindowFocusAsAGroup
+# + I ThisWindow ($[0]) All ($[FLUVIOL_FOCUSABLE_WINDOW], $[0], !Raised)\
+#     RaiseWindow

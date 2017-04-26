@@ -37,9 +37,8 @@ SetEnv FLUVIOL_MOD_ALT     M
 SetEnv FLUVIOL_MOD_NUMLOCK 2
 SetEnv FLUVIOL_MOD_SUPER   4
 
-#FIXME: Hmm, really?
 # Alias the Super key to its customary Unix name, "Super_L."
-SetEnv FLUVIOL_KEY_MODIFIER_SUPER_UNIX Super_L
+SetEnv FLUVIOL_KEY_MODIFIER_SUPER_UNIX Super_R
 
 DefineFunc SetKeyNamesQwerty
 + I Log loading Qwerty keymap...

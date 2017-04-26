@@ -236,9 +236,8 @@ DefineFunc SetDirAndMakeIfNeeded
 #FIXME: Rename to SetEnvToCommand().
 # void SetCommand(string VariableName, string CommandName)
 #
-# Set the passed environment variable to the absolute path of the passed
-# program on this machine. If already set, this function returns without
-# modifying this variable's current value.
+# Set the environment variable with the passed name to the absolute path of the
+# passed program on this machine.
 #
 # If this program does not exist on this machine, this function currently
 # sets this environment variable to the empty string and logs an error message.
@@ -249,14 +248,13 @@ DefineFunc SetCommand
 #FIXME: Rename to SetEnvToFirstCommand().
 # void SetPreferredCommand(string VariableName, string CommandName1, ...)
 #
-# Sets the environment variable "VariableName", if not already set, to the
-# absolute path of the first program in the string "CommandNames" of space-
-# delimited program names existing on this machine. If already set, this
-# function returns without modifying this variable's current value.
+# Sets the environment variable with the passed name to the # absolute path of
+# the first program in the string "CommandNames" of space-delimited command
+# names existing on this machine.
 #
 # Thus, if both "/usr/bin/aterm" and "/usr/bin/eterm" exist on this machine
-# while "/usr/bin/urxvt" does not, the following call sets "FLUVIOL_XTERM_COMMAND" to
-# "/usr/bin/aterm":
+# while "/usr/bin/urxvt" does not, the following call sets
+# "FLUVIOL_XTERM_COMMAND" to "/usr/bin/aterm":
 #
 #   SetPreferredCommand "FLUVIOL_XTERM_COMMAND" "urxvt aterm eterm"
 #
@@ -267,7 +265,6 @@ DefineFunc SetCommand
 #+ I SetEnv env.name  $0
 #+ I SetEnv env.value $0
 DefineFunc SetPreferredCommand
-+ I Test (EnvIsSet $0) LogAndBreak set $0 to "$[$0]".
 + I PipeRead '\
 PREFERRED_COMMAND="$(which $[1-] 2>/dev/null | head -1)"; \
 if [ -n "$PREFERRED_COMMAND" ]; then \
@@ -422,17 +419,6 @@ Style * NoPPosition
 # Allow transient windows to place themselves.
 Style * UseTransientPPosition
 
-# ....................{ WINDOW LIST                        }....................
-# Shows a well-decorated, descriptive window list while cycling forwards and
-# backwards through windows. (See "KEY BINDINGS", above.)
-DefineFunc ShowWindowList
-+ I WindowList ($[FLUVIOL_FOCUSABLE_WINDOW]) \
-    Root c c \
-    Function RaiseWindowToHeadOfWindowList \
-    CurrentAtEnd \
-    MaxLabelWidth 40 NoCurrentDeskTitle NoGeometry NoHotkeys \
-    SelectOnRelease $[FLUVIOL_KEY_MODIFIER_SUPER_UNIX]
-
 # ....................{ WINDOW FOCUSING                    }....................
 # FVWM is ICCCM-compliant. Unfortunately, this windowing manager psuedo-standard
 # permits windows to designate themselves as non-focusable - and FVWM respects
@@ -451,8 +437,8 @@ FocusStyle * !LeaveToUnfocus
 FocusStyle * !FocusByProgram
 
 # Permit calling Focus(), but do not warp the pointer when doing so.
-#FocusStyle * FocusByFunction, FocusByFunctionWarpPointer
 FocusStyle * FocusByFunction, !FocusByFunctionWarpPointer
+#FocusStyle * FocusByFunction, FocusByFunctionWarpPointer
 
 # Sort the window list by the order such windows were focused.
 FocusStyle * SortWindowlistByFocus
@@ -469,7 +455,7 @@ FocusStyle * ClickToFocus, ClickDecorToFocus, ClickIconToFocus
 
 # Raise focused windows when clicking on or in those windows. Coupled with the
 # prior focus style, the first and second clicks on unfocused windows focus and
-# raise such windows (mimicing the conventional "double click").
+# raise such windows respectively (mimicing "double click").
 FocusStyle * ClickRaisesFocused, ClickDecorRaisesFocused, ClickIconRaisesFocused
 
 # Pass clicks focusing or raising windows onto those windows.
@@ -480,89 +466,12 @@ FocusStyle * PassFocusClick, PassRaiseClick
 FocusStyle * IgnoreRaiseClickMotion
 
 # ....................{ WINDOW FOCUSING ~ functions        }....................
-# Select the currently focused window if satisfying $[FLUVIOL_FOCUSABLE_WINDOW].
-# This is of principle use in definining sensible key bindings.
-DefineFunc CurrentWindow
-+ I Current ($[FLUVIOL_FOCUSABLE_WINDOW]) $*
-
-# Raise and unshade (but not focus) the current window.
-DefineFunc RaiseWindow
-+ I Raise
-+ I WindowShade False
-
-# Raise, unshade, and focus the current window.
-DefineFunc RaiseWindowAndFocus
-+ I RaiseWindow
-+ I Focus
-
-# Called by AfterChangingWindowFocus() to record the most recently
-# focused window for the current page.
-DefineFunc StoreLastFocusedWindowForCurrentPage
-+ I All ($[FLUVIOL_RECALLABLE_WINDOW], !Focused) \
-    State $[FLUVIOL_IS_WINDOW_LAST_FOCUSED] False
-+ I Current ($[FLUVIOL_RECALLABLE_WINDOW]) \
-    State $[FLUVIOL_IS_WINDOW_LAST_FOCUSED] True
-
-# Called by AfterChangingToNewPage() to restore the most recently
-# focused window for the current page.
-DefineFunc RaiseLastFocusedWindowForCurrentPage
-# If there is a recently focused window as recorded by the
-# "FLUVIOL_IS_WINDOW_LAST_FOCUSED" state, focus that window.
-+ I Next ($[FLUVIOL_RECALLABLE_WINDOW], State $[FLUVIOL_IS_WINDOW_LAST_FOCUSED]) \
-    KeepRc RaiseWindowAndFocus
-# Otherwise, focus the window nearest the mouse cursor.
-+ I TestRc (NoMatch) \
-    Next ($[FLUVIOL_RECALLABLE_WINDOW]) \
-    RaiseWindowAndFocus
-
-# Called by the WindowList as implementation of its window-switching.
-DefineFunc RaiseWindowToHeadOfWindowList
-+ I FlipFocus
-+ I RaiseWindowAndFocus
-
-# Changes window focus for windows matching the passed condition as a group.
-# That is, focusing any one window matching the passed condition automatically
-# causes all other windows which also match the passed condition to be focused;
-# similarly, defocusing any window matching the passed condition automatically
-# causes all other windows which also match the passed condition to be
-# defocused.
-#
-# This can be used to ensure, in particular, that GiMP windows focus and defocus
-# as a uniform group.
-DefineFunc ChangeWindowFocusAsAGroup
-+ I ThisWindow ($[0]) All ($[FLUVIOL_FOCUSABLE_WINDOW], $[0], !Raised)\
-    RaiseWindow
-
 # When restarting FVWM, FVWM occasionally fails to restore window focus to the
 # most recently focused window prior to the reset. We restore the focus, now, to
 # some eligible window on the current desktop page.
 AddToFunc RestartFunction
 + I None (Focused) Next ($[FLUVIOL_FOCUSABLE_WINDOW], !Shaded)\
     RaiseWindowAndFocus
-
-# ....................{ WINDOW SHADING                     }....................
-# Shade and lower the current window.
-DefineFunc ShadeWindow
-+ I WindowShade True
-+ I Lower
-
-# Shade, lower, and defocus the current window; then, unshade, raise, and
-# refocus the most recently focused window for the current desktop page.
-DefineFunc ShadeWindowAndRaisePreviousWindow
-+ I ShadeWindow
-+ I Prev ($[FLUVIOL_FOCUSABLE_WINDOW], !Shaded) RaiseWindowAndFocus
-
-# Shade all "shady," unfocused windows. (Typically, this is called when changing
-# window focus away from the folque or a fluake, to shade that window.)
-DefineFunc ShadeAllShadyUnfocusedWindows
-+ I All ($[FLUVIOL_FOCUSABLE_WINDOW], $[FLUVIOL_SHADY_WINDOW], !Focused, !Shaded)\
-    ShadeWindow
-
-# Raise and unshade the current window, if it's shaded; or lower and shade it,
-# otherwise.
-DefineFunc ToggleWindowShading
-+ I ThisWindow (Shaded) KeepRc ThisWindow RaiseWindowAndFocus
-+ I TestRc (NoMatch)           ThisWindow ShadeWindowAndRaisePreviousWindow
 
 # ....................{ WINDOW MOVING                      }....................
 # Move windows opaquely, when the size of those windows is less than or equal to
@@ -594,6 +503,9 @@ Style * ResizeOpaque
 Style * ResizeHintOverride
 
 # ....................{ WINDOW STYLES                      }....................
+# Do not display icons for minimized windows.
+Style * !Icon
+
 # Hide the window frame and titlebar for all windows. (This requires that you
 # move, resize, and otherwise manipulate windows with key bindings.)
 Style * !Title, !Handles, BorderWidth 0, HandleWidth 0
@@ -658,10 +570,10 @@ BusyCursor * False
 DefineFunc ScreenshotScreen I RunCommand $[FLUVIOL_SCREENSHOT_SCREEN_COMMAND]
 
 # Capture a screenshot of the selected window.
-DefineFunc ScreenshotScreen I RunCommand $[FLUVIOL_SCREENSHOT_WINDOW_COMMAND] $[w.id]
+DefineFunc ScreenshotWindow I RunCommand $[FLUVIOL_SCREENSHOT_WINDOW_COMMAND] $[w.id]
 
 # Capture a screenshot of the selected region.
-DefineFunc ScreenshotScreen I RunCommand $[FLUVIOL_SCREENSHOT_REGION_COMMAND]
+DefineFunc ScreenshotRegion I RunCommand $[FLUVIOL_SCREENSHOT_REGION_COMMAND]
 
 # ....................{ AUDIO VOLUME                       }....................
 #FIXME: Unworking, I believe. Indeed; fix me up, please-please-please.
@@ -670,6 +582,21 @@ DefineFunc ScreenshotScreen I RunCommand $[FLUVIOL_SCREENSHOT_REGION_COMMAND]
 #DefineFunc RaiseVolume I RunCommand $[FLUVIOL_RAISE_VOLUME_COMMAND]
 
 # --------------------( WASTELANDS                         )--------------------
+# void SetCommand(string VariableName, string CommandName)
+#
+# Set the passed environment variable to the absolute path of the passed
+# program on this machine. If already set, this function returns without
+# modifying this variable's current value.
+
+# void SetPreferredCommand(string VariableName, string CommandName1, ...)
+#
+# Sets the environment variable "VariableName", if not already set, to the
+# absolute path of the first program in the string "CommandNames" of space-
+# delimited program names existing on this machine. If already set, this
+# function returns without modifying this variable's current value.
+# DefineFunc SetPreferredCommand
+# + I Test (EnvIsSet $0) LogAndBreak set $0 to "$[$0]".
+
 # ....................{ XTERM CONSOLE                      }....................
 # Create a new console window. This function ensures a sane environment prior to
 # creating the console window: in particular, if "$[FLUVIOL_XTERM_COMMAND]" is "urxvtc",

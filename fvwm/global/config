@@ -14,6 +14,7 @@
 # ....................{ KEYMAP                             }....................
 #FIXME: Actually implement "Auto". And the other two are pretty half-@ssed at
 #the moment, as well.
+
 # Fluviol-specific keyboard keymap to be used. Setting this has no bearing on
 # the current "xkb"-enabled keymap. Permissible values include:
 #
@@ -21,6 +22,20 @@
 # * "Qwerty", the Qwerty keymap as under most physical keyboard layouts.
 # * "Dvorak", the Dvorak keymap.
 SetEnv FLUVIOL_KEYMAP Dvorak
+
+# ....................{ LOCATION                           }....................
+# Latitude and longitude of the current geophysical location, commonly passed to
+# location-based services (e.g., "redshift") to avoid privacy-invasive lookup.
+SetEnv FLUVIOL_LATITUDE   44.7667
+SetEnv FLUVIOL_LONGITUDE -76.6833
+
+# Desired day and night color temperatures, passed to color temperature changers
+# (e.g., "redshift"). "redshift" defaults to 5500K and 3700K respectively. While
+# the former is quite acceptable, the latter is often perceived as "too dark"
+# for northerly locations and hence slightly increased.
+SetEnv FLUVIOL_COLOR_TEMPERATURE_DAY   5500K
+SetEnv FLUVIOL_COLOR_TEMPERATURE_NIGHT 4200K
+#SetEnv FLUVIOL_COLOR_TEMPERATURE_NIGHT 4400K
 
 # ....................{ X.ORG =xrandr                      }....................
 # The [X].org [R]esize [and] [R]otate Extension [XRandR] permits dynamic
@@ -82,7 +97,7 @@ SetEnv FLUVIOL_XTERM_COMMAND_ARGUMENTS "-geometry +0+0"
 #Hence, rename "FLUVIOL_FLUAKE_SHELL_COMMAND".
 
 # Shell to run on Fluake consoles.
-SetPreferredCommand FLUVIOL_SHELL_COMMAND "zsh fish bash tcsh csh ksh sh"
+SetPreferredCommand FLUVIOL_SHELL_COMMAND "zeshy zsh fish bash tcsh csh ksh sh"
 
 # ....................{ FOLQUE                             }....................
 # Folques are single-line, small-width consoles that, as with Fluakes,
@@ -236,6 +251,11 @@ SetEnv FLUVIOL_WALLPAPER_HOME "$[HOME]/pub/image/sijun"
 
 #FIXME: Add support for, in order of efficiency and capability:
 #wmsetbg feh habak hsetroot chbg display qiv xv xsri xli xsetbg xsetroot
+#FIXME: For unknown reasons, Esetroot now reliably induces segmentation faults
+#on page changes and has been deprioritized. Since Feh does *NOT* and remains
+#the most commonly recommended wallpaper changer under Arch, Feh has been
+#promoted to the forefront.
+
 # Rotate wallpaper by calling this external command. For low-end machines
 # (notably, the iBook G3 500Mhz under which I run), we recommend you install
 # Esetroot; and use Esetroot to rotate wallpaper. (For Gentoo users, install
@@ -244,15 +264,15 @@ SetEnv FLUVIOL_WALLPAPER_HOME "$[HOME]/pub/image/sijun"
 #
 #   Command         | Gento Installation
 #   ----------------+-------------------
-#   Esetroot -fit   | emerge eterm
 #   feh --bg-center | emerge feh
 #   habak -mC -hi   | emerge habak
+#   Esetroot -fit   | emerge eterm
 #
 # Esetroot performs well with both low- and high-end hardware. All others
 # performed poorly on my (frankly, low-end) laptop, adding roughly 500ms to
 # desktop page-switch time. As recommendation, also note the "awsetbg" wrapper
 # bundled with the Awesome window manager preferably selects Esetroot.
-SetPreferredCommand FLUVIOL_WALLPAPER_COMMAND "Esetroot feh habak"
+SetPreferredCommand FLUVIOL_WALLPAPER_COMMAND "feh habak Esetroot"
 
 # --------------------( WASTELANDS                         )--------------------
 #SetPreferredCommand FLUVIOL_XTERM_COMMAND "urxvtc urxvt aterm eterm"

@@ -166,14 +166,14 @@ SetEnv FLUVIOL_SCREENSHOT_REGION_COMMAND "$[FLUVIOL_SCREENSHOT_COMMAND] --region
 SetDirAndMakeIfNeeded FLUVIOL_SCREENSHOT_HOME "$[FLUVIOL_CACHE_HOME]/screenshots"
 
 # ....................{ WALLPAPER ROTATION                 }....................
-# Map the wallpaper command to appropriate options to be passed to such command.
+# Map the wallpaper command to appropriate options to be passed to this command.
 PipeRead '\
 case "$[FLUVIOL_WALLPAPER_COMMAND]" in \
-  *Esetroot) A="-fit";; \
-  *feh) A="--bg-center";; \
-  *habak) A="-mC -hi";; \
+  *feh)      FLUVIOL_WALLPAPER_COMMAND_OPTIONS="--bg-max";; \
+  *habak)    FLUVIOL_WALLPAPER_COMMAND_OPTIONS="-mC -hi";; \
+  *Esetroot) FLUVIOL_WALLPAPER_COMMAND_OPTIONS="-fit";; \
 esac; \
-echo SetEnv FLUVIOL_WALLPAPER_ARGUMENTS "$A"'
+echo SetEnv FLUVIOL_WALLPAPER_ARGUMENTS "$FLUVIOL_WALLPAPER_COMMAND_OPTIONS"'
 
 # ....................{ WINDOW OPTIONS                     }....................
 # Move windows this far, when moving. (This is, by default, in percentage of
@@ -203,12 +203,26 @@ SetEnv FLUVIOL_RECALLABLE_WINDOW "$[FLUVIOL_FOCUSABLE_WINDOW], !Sticky"
 #FIXME: Hmm; it'd be nicest, actually, to consider any window spawned from
 #another window as simply a window of the same abstract "group" and hence all
 #minimized and maximized as a group. No idea how to effect this, of course.
-# Groupable windows are focused and defocused as a group. That is, any
-#etEnv GROUPABLE_WINDOW "$[FLUVIOL_FOCUSABLE_WINDOW] ...?"
 
-# Overlappable windows do not shade other windows after gaining focus and are
-# not shaded after losing focus.
-SetEnv FLUVIOL_OVERLAPPABLE_WINDOW "\"Event Tester|FvwmIdent\""
+# Groupable windows are focused and defocused as an aggregate group rather than
+# individually, as is the Fluviol default.
+SetEnv FLUVIOL_GROUPABLE_WINDOW "\"Gimp*\""
+
+# Topmost windows are overlappable windows (see below) defaulting to the
+# topmost layer of their current page. Such windows do *NOT* shade other
+# windows after gaining focus, are *NOT* shaded after losing focus, and
+# occlude all non-topmost windows on such page.
+# SetEnv FLUVIOL_TOPMOST_WINDOW\
+#     "\"Visual Novel Reader\""
+    # "\"FvwmIdent|Event Tester\""
+    # "\"FvwmIdent|Event Tester|Visual Novel Reader\""
+
+# Overlappable windows do *NOT* shade other windows after gaining focus and are
+# *NOT* shaded after losing focus.
+SetEnv FLUVIOL_OVERLAPPABLE_WINDOW\
+    "\"FvwmIdent|Event Tester|Visual Novel Reader\""
+    # "\"FvwmIdent|Event Tester\""
+    # "$[FLUVIOL_TOPMOST_WINDOW]"
 
 #FIXME: Rename to "FLUVIOL_INITIALLY_MAXIMIZED_WINDOW". All other names read
 #sensibly. *WAIT*. The "InitialMapCommand" style obsoletes this. Excise this.
@@ -235,7 +249,10 @@ SetEnv FLUVIOL_FOLQUE \
 SetEnv FLUVIOL_IS_WINDOW_LAST_FOCUSED 8
 
 # --------------------( WASTELANDS                         )--------------------
-#FIXME: This is demonstrably horrible. We want to be importing from the current
+# SetEnv FLUVIOL_OVERLAPPABLE_WINDOW\
+#     "\"FvwmIdent|Event Tester|Visual Novel Reader\""
+#etEnv FLUVIOL_GROUPABLE_WINDOW "$[FLUVIOL_FOCUSABLE_WINDOW] ...?"
+#FUXME: This is demonstrably horrible. We want to be importing from the current
 #directory and instead just running:
 #
 #    ImportFromCurrentDir config

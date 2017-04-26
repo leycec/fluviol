@@ -13,11 +13,7 @@
 #FIXME: Define new BindMouse() function.
 
 # ....................{ ROOT WINDOW                        }....................
-#Mouse  
-
-# ....................{ GENERAL                            }....................
-# Bind <Super-Alt-Esc> to reload the current recipe.
-Bind Escape $[FLUVIOL_MOD_SUPER]$[FLUVIOL_MOD_ALT] \
-    Restart
+# Bind <Right-Click> on the desktop to showing the window list for all desktops.
+Mouse 3 R A WindowList
 
 # --------------------( WASTELANDS                         )--------------------

@@ -208,23 +208,24 @@ DefineFunc BindWindowCyclingToWindowRaising
 
 # Bind <Super-Tab> and <Super-Shift-Tab> depending on whether we are running
 # under FVWM-Crystal or not.
-BindWindowCyclingToWindowRaising
+# BindWindowCyclingToWindowRaising
+BindWindowCyclingToWindowList
 
 # ....................{ SCREENSHOTS                        }....................
 # Bind <PrintScr> to capture a screenshot of the entire screen.
-Bind $[FLUVIOL_KEY_PRINT] $[FLUVIOL_MOD_NONE] \
-    ScreenshotScreen
+# Bind $[FLUVIOL_KEY_PRINT] $[FLUVIOL_MOD_NONE] \
+#     ScreenshotScreen
 
-# Bind <Ctrl-PrintScr> and <Alt-PrintScr> to capture a screenshot of the
-# selected window.
-Bind $[FLUVIOL_KEY_PRINT] $[FLUVIOL_MOD_CTRL] \
-    ScreenshotWindow
-Bind $[FLUVIOL_KEY_PRINT] $[FLUVIOL_MOD_ALT] \
-    ScreenshotWindow
+# Bind <Ctrl-PrintScr> and <Alt-PrintScr> to both capture a screenshot of the
+# # selected window.
+# Bind $[FLUVIOL_KEY_PRINT] $[FLUVIOL_MOD_CTRL] \
+#     ScreenshotWindow
+# Bind $[FLUVIOL_KEY_PRINT] $[FLUVIOL_MOD_ALT] \
+#     ScreenshotWindow
 
 # Bind <Shift-PrintScr> to capture a screenshot of the selected region.
-Bind $[FLUVIOL_KEY_PRINT] $[FLUVIOL_MOD_SHIFT] \
-    ScreenshotRegion
+# Bind $[FLUVIOL_KEY_PRINT] $[FLUVIOL_MOD_SHIFT] \
+#     ScreenshotRegion
 
 # ....................{ VOLUME CONTROL                     }....................
 # Bind <XF86AudioMute>, <XF86AudioLowerVolume>, and <XF86AudioRaiseVolume>

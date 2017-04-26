@@ -42,6 +42,15 @@ AddToFunc InitFunction
 # and pasted with Ctrl-v). Synchronizing these buffers is (generally) a good
 # thing. See: http://www.nongnu.org/autocutsel
 + I Daemonize autocutsel -selection CLIPBOARD -fork
+# Implicitly adjust the color temperature of the current display given the
+# current time of day and geophysical location. To avoid privacy-invasive
+# lookups, consider explicitly specifying such location. Dismantled, this is:
+#
+# * "-l ${latitude}:${longitude}", where such latitude and longitude should
+#   correspond to that of the current geophysical location.
++ I Daemonize redshift\
+    -l $[FLUVIOL_LATITUDE]:$[FLUVIOL_LONGITUDE]\
+    -t $[FLUVIOL_COLOR_TEMPERATURE_DAY]:$[FLUVIOL_COLOR_TEMPERATURE_NIGHT]
 # Hide the mouse pointer after 1 second of mouse inactivity with all windows,
 # including the "root window" (i.e., the desktop).
 + I Daemonize unclutter -idle 1
